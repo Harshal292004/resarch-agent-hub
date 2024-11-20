@@ -18,16 +18,16 @@ class Agents:
         return Agent(
             llm=self.llm,
             role='Questioner',
-            goal="Use the process_interaction tool and return its complete output dictionary exactly as received, preserving all keys and structure",
-            backstory="""You are a data preservation questioner. Your role is to:
-                1. Use the process_interaction tool
-                2. Return the COMPLETE dictionary output exactly as received from the tool
-                3. Do not modify, summarize, or restructure the tool's output in any way
-                4. Preserve all keys and nested structures in the output""",
-            allow_delegation=True,
+            goal="Consistently capture user research requirements using process_interaction tool",
+            backstory="""You are a systematic data capture agent. 
+            - Always use the process_interaction tool 
+            - Ensure consistent output structure
+            - Preserve exact conversation flow
+            - Do not deviate from the original interaction""",
+            allow_delegation=False,  # Prevent deviation
             tools=ResearcherToolSet.questioning_tools(),
             verbose=False
-        )    
+        ) 
         
     # this agent will do the research and provide a raw format data from the web etc 
     def research_agent(self ):

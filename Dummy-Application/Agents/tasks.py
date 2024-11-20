@@ -1,15 +1,20 @@
 from crewai import  Task
 from typing import Dict, Any
+from pydantic import BaseModel
+from typing import Dict, Any
+
+# Create a Pydantic model to represent the output structure
 
 class Tasks:
-    def task_question(self, agent) -> Task:
+        
+    def task_question(self, agent):
         return Task(
-            description="""Engage with the user to understand their research topic by:
-                1. Using the conversation processing tool to gather initial information""",
-            expected_output="Conversation history and initial research requirements as a structured dictionary",
-            agent=agent
+            description="Use process_interaction tool to gather initial research information",
+            expected_output="A structured dictionary with keys: 'conversation' and 'initial_research_requirements'",
+            agent=agent,
         )
         
+    
     def task_research(self, agent, conversation_data: Dict[str, Any]) -> Task:
         research_template = """
         Conduct thorough academic research based on the provided conversation:

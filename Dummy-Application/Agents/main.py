@@ -34,13 +34,10 @@ def main():
     )
    
     conversation_result = crew1.kickoff()
-    conversation_result_dict = conversation_result.to_dict()  # Use .to_dict() if supported
-    conversation_history = conversation_result_dict["conversation_history"]
-    print(conversation_history)
-    print(f"Conversation Result: {conversation_result.raw.Conversation_History}")
-    conversation_history_direct = conversation_result.conversation_history  # Use attribute access
-    print(conversation_history_direct)
-
+    print(f"Conversation_result type: {type(conversation_result)}")
+    print(f"Conversation  history:{conversation_result.conversation}")
+    
+    
     """ task2= tasks_manager.task_research(research_agent,conversation_result.get("Conversation History"))
     crew2=Crew(
         agents=[research_agent],
