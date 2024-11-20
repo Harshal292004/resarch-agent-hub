@@ -21,48 +21,15 @@ def main():
     latex_converter_agent = agents_.latex_converter_agent()
     latex_to_pdf_agent = agents_.latex_to_pdf_agent()
     
-    # Interactive Research Topic Collection
-    initial_topic = input("Enter your research topic: ")
     
-    def modify_task_resarch(context):
-        """
-        Dynamically modify research task based on questioning agent's output
-        """
-        refined_question = context.get('question_output', initial_topic)
-        return tasks.task_resarch(
-            agent=research_agent, 
-            user_question=refined_question,
-            llm_answers=context.get('question_answers', '')
-        )
-        
-    def modify_format_resarch(context):
-        """
-        Dynamically modify formatting task based on research output
-        """
-        return tasks.format_resarch(
-            agent=research_summarizer_agent,
-            resarch_outcomes=context.get('research_output', '')
-        )
+    task_question=tasks.task_question(agent=questioning_agent,answer='')
+    task_resarch=tasks.task_resarch(agent=research_agent,user_question='',llm_answers='')
+    format_resarch=tasks.format_research(agent=research_summarizer_agent,resarch_outcomes='')
+    task_convert_latex=tasks.task_convert_latex(agent=latex_converter_agent,resarch_name='')
+    task_convert_latex_to_pdf=tasks.task_convert_latex_to_pdf(agent=latex_to_pdf_agent,latex_file_name='')
     
-    def modify_latex_convert(context):
-        """
-        Dynamically modify LaTeX conversion task
-        """
-        return tasks.task_convert_Latex(
-            agent=latex_converter_agent,
-            resarch_name=initial_topic.replace(" ", "_"),
-            formated_resarch=context.get('formatted_research', '')
-        )
     
-        
-    """  task_question=tasks.task_question(agent=questioning_agent,answer='')
-        task_resarch=tasks.task_resarch(agent=research_agent,user_question='',llm_answers='')
-        format_resarch=tasks.format_resarch(agent=resarch_sumarizer_agent,resarch_outcomes='')
-        task_convert_Latex=tasks.task_convert_Latex(agent=latex_converter_agent,resarch_name='')
-        task_convert_latex_to_pdf_and_save=tasks.task_convert_latex_to_pdf_and_save(agent=latex_to_pdf_agent,latex_file_name='')
-    """
-    
-    """ crew=Crew(
+    crew=Crew(
         agents=[
             questioning_agent,
             research_agent,
@@ -71,60 +38,47 @@ def main():
             latex_to_pdf_agent
         ],
         tasks=[
-            tasks.task_question(
-                agent=questioning_agent,
-                question=initial_topic,
-                answer=""  # initally empty 
-                ),
-            
-            tasks.task_resarch(
-                agent=research_agent,
-                user_question=initial_topic, #pass initial topic 
-                llm_answers=""  # Will be populated dynamically 
-                ),
-            tasks.format_resarch(
-                agent=research_summarizer_agent,
-                resarch_outcomes=''# Will be populated by previous task
-                ),
-            # 4th Task: Convert to LaTeX
-            tasks.task_convert_Latex(
-                agent=latex_converter_agent,
-                resarch_name=initial_topic.replace(" ", "_"),
-                formated_resarch=""  # Will be populated by previous task
+            lambda: tasks.task_question(
+                agent=questioning_agent
             ),
             
-            # 5th Task: Convert LaTeX to PDF
-            tasks.task_convert_latex_to_pdf_and_save(
+            # Task 2: Research based on conversation history
+            lambda conversation: tasks.task_resarch(
+                agent=research_agent,
+                history=conversation
+            ),
+            
+            lambda research_data:tasks.format_research(
+                agent=research_summarizer_agent,
+                research_outcomes={
+                    'literature_review': research_data.get('literature_review', {}),
+                    'methodology_analysis': research_data.get('methodology_analysis', {}),
+                    'key_findings': research_data.get('key_findings', []),
+                    'research_gaps': research_data.get('research_gaps', []),
+                    'future_directions': research_data.get('future_directions', [])
+                }
+            ),
+            
+            # Task 4: Convert to LaTeX
+            lambda formatted_data: tasks.task_convert_latex(
+                agent=latex_converter_agent,
+                formatted_research={
+                    'title': formatted_data.get('title', ''),
+                    'formatted_content': formatted_data.get('formatted_content', {}),
+                },
+                research_name=formatted_data.get('title', 'research_paper').replace(" ", "_").lower()
+            ),
+            
+            # Task 5: Convert LaTeX to PDF
+            lambda latex_path: tasks.task_convert_latex_to_pdf(
                 agent=latex_to_pdf_agent,
-                latex_file_name=initial_topic.replace(" ", "_")
+                latex_file_name=latex_path
             )
         ],
         process="sequential",
         
-    ) """
-        # Crew with dynamic task modification
-    crew = Crew(
-        agents=[
-            questioning_agent,
-            research_agent,
-            research_summarizer_agent,
-            latex_converter_agent,
-            latex_to_pdf_agent
-        ],
-        tasks=[
-            task_question,
-            modify_task_resarch,
-            modify_format_resarch,
-            modify_latex_convert,
-            tasks.task_convert_latex_to_pdf_and_save(
-                agent=latex_to_pdf_agent,
-                latex_file_name=initial_topic.replace(" ", "_")
-            )
-        ],
-        # Use a process that allows context sharing between tasks
-        process='hierarchical'  
-    )
-    
+    ) 
+        
     # Execute research paper generation workflow
     result = crew.kickoff()
     

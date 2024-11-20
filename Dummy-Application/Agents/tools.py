@@ -15,49 +15,102 @@ from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 from langchain_text_splitters.character import CharacterTextSplitter
 from langchain_community.vectorstores import FAISS 
 """
-from langchain_groq import ChatGroq
-from dotenv import load_dotenv
-
-
+from langchain.prompts import PromptTemplate
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationChain
+from langchain_groq import ChatGroq
+from dotenv import load_dotenv
 
 load_dotenv()
 
 class ResearcherToolSet:
-    @tool
-    def process_interation(user_question):
-        """_summary_
-
-        Returns:
-            _type_: _description_
-        """        
+    
+    def create_research_agent(self):
+        """Create and configure the research-focused chat agent"""
+        
         llm = ChatGroq(
-            model="llama-3.1-70b-versatile",
-            temperature=0
+            model="llama3-8b-8192",
+            temperature=0.7,
+            max_tokens=None,
+            timeout=None,
+            max_retries=2,
         )
-        memory = ConversationBufferMemory(
-            llm=llm,
-            output_key="answer",
-            memory_key="chat_history",
-            return_messages=True
+
+        # Enhanced prompt template with corrected input variables
+        prompt_template = """You are an intelligent research assistant focused on helping users develop academic projects and research.
+
+        Key Objectives:
+        1. Understand the core research topic or project goal
+        2. Identify knowledge gaps and technical requirements
+        3. Provide relevant suggestions and insights
+        4. Maintain context throughout the conversation
+        
+        Conversation Guidelines:
+        - Ask focused, relevant follow-up questions (max 2 per response)
+        - Build upon previous responses
+        - Provide specific examples or suggestions when possible
+        - Guide the conversation towards practical next steps
+        
+        Previous Conversation: {history}
+        Human: {input}
+        
+        Assistant:"""
+
+        # Corrected memory configuration
+        memory = ConversationBufferMemory()
+
+        # Create prompt template with correct input variables
+        template = PromptTemplate(
+            input_variables=["history", "input"],
+            template=prompt_template
         )
-        chain = ConversationChain(
+
+        return ConversationChain(
             llm=llm,
-            chain_type="map_reduce",
+            prompt=template,
             memory=memory,
             verbose=True
         )
-        initial_user_response=user_question
-        while  initial_user_response is not  "sufficient":
+    
+    
+    
+    def format_conversation(self,messages):
+        """Format the conversation history in a readable way"""
+        formated_conversation_dict={}
+        print("\n=== Conversation Summary ===")
+        for i, message in enumerate(messages, 1):
+            role = "Human" if message.type == "human" else "Assistant"
+            formated_conversation_dict[f"{i}. {role}:"]=message.content
             
-            response=chain(initial_user_response)
-            print(response)
-            input()
+        return formated_conversation_dict
             
+    
+    @tool
+    def process_interaction(self):
+        """Process the user interaction with improved context management and flow"""
         
-        return memory
+        print("Research Assistant: Hello! I'm here to help with your research project. What would you like to explore?")
+        
+        chain = self.create_research_agent()
+        conversation_active = True
+        
+        while conversation_active:
+            # Get user input
+            user_input = input("\nYou: ")
             
+            if user_input.lower() == 'exit':
+                conversation_active = False
+                continue
+
+            # Generate response
+            try:
+                response = chain.predict(input=user_input)
+                print("\nResearch Assistant:", response)
+            except Exception as e:
+                print(f"An error occurred: {str(e)}")
+                print("Please try again or type 'exit' to end the conversation.")
+
+        return self.format_conversation(chain.memory.chat_memory.messages)
         
         
     # resarcher tools
@@ -206,15 +259,6 @@ class ResearcherToolSet:
         contents = [content[:1000] for content in contents]
         return "\n\n".join(contents)
         
- 
-    """ @tool
-    def web_search_tools(self):
-        _summary_
-
-        Args:
-            query (_type_): _description_
-       
-        return ResearcherToolSet.tools() """
     
      # for latex writer
     @tool
@@ -320,6 +364,11 @@ class ResearcherToolSet:
             ResearcherToolSet.search,
             ResearcherToolSet.find_similar,
             ResearcherToolSet.get_contents
+        ]
+        
+    def questioning_tools():
+        return[
+            ResearcherToolSet.process_interaction
         ]
         
     """ def storage_tools():

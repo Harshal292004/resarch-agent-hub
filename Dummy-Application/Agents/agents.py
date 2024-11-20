@@ -21,9 +21,10 @@ class Agents:
         return Agent(
             llm=self.llm,
             role='Questioner',
-            goal="Counter-question the user based on previous answers (max 3 questions).",
-            backstory="You are a researcher who analyzes questions and challenges assumptions through counter-questions.",
-            allow_delegation=False,
+            goal="Counter-question the user based on previous answers ",
+            backstory="You are a researcher who analyzes questions and challenges assumptions through counter-questions and calling a tool which helps in doing so . And provide the output of the tool to next agent ",
+            allow_delegation=True,
+            tools=ResearcherToolSet.questioning_tools(),
             verbose=False
         )     
         
@@ -34,7 +35,7 @@ class Agents:
             role='Researcher',
             goal=f"Conduct thorough research on the question and summarize findings ",
             backstory="You are a researcher who performs in-depth research to provide accurate answers.",
-            allow_delegation=False,
+            allow_delegation=True,
             tools=ResearcherToolSet.resarch_tools(),
             verbose=False
         )
@@ -46,7 +47,7 @@ class Agents:
             role='Resarch Summarizer',
             goal="Convert the cluttered resarch into a summaried format which can be converted   to LaTeX code",
             backstory="You are an expert in converting cluttered resarch  into  strucutred and summarized format for research papers.",
-            allow_delegation=False,
+            allow_delegation=True,
             verbose=False
         )
     
@@ -58,7 +59,7 @@ class Agents:
             role='LaTeX Converter ',
             goal="Convert the given formated resarch to latex code and then save it to latex file",
             backstory="You are an expert in converting format resarch  into LaTeX code for research papers.",
-            allow_delegation=False,
+            allow_delegation=True,
             verbose=False,
             tools=ResearcherToolSet.latex_conver_tools()
         )

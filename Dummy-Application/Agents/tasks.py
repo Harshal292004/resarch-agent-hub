@@ -2,41 +2,124 @@ from crewai import  Task
 
 
 class Tasks:
-    def task_question(self, agent,question,answer):
+    def task_question(self, agent):
         return Task(
-            description=f"given a question :{question} and a answer:{answer} genrate a counter question",
-            expected_output="A counter question which either supports, opposes or explores the idea provided ",
+            description=
+            """Engage with the user to understand their research topic by:
+                1. Using the conversation processing tool to gather initial information
+            """,
+            expected_output={"conversation_history":"dict"},
             agent=agent
         )
-
-    def task_resarch(self, agent,user_question: str,llm_answers:str):
+    def task_resarch(self, agent,history:dict):
+        """Comprehensive research task based on conversation insights"""
+        research_template = """
+        Conduct thorough academic research based on the provided conversation:
+        
+        CONVERSATION CONTEXT:
+        {conversation}
+        
+        RESEARCH REQUIREMENTS:
+        1. Analyze key topics and research questions identified
+        2. Conduct literature review covering:
+           - Recent academic papers (last 5 years)
+           - Seminal works in the field
+           - Current state-of-the-art
+        3. Identify and document:
+           - Methodologies used
+           - Key findings
+           - Research gaps
+           - Future directions
+        
+        Using the  tools provided :
+        1. For Web Research:search,find_similar,get_contents
+        2. For Academic Paper review:arxiv_research_tool,
+        3. For loading documents from web:load_document,    
+        """
         return Task(
-            description=f"Based on the userquestions :{user_question} and the llm answers:{llm_answers} you have to do a through resarch ",
+            description=research_template.format(
+                conversation= "\n".join([f"{k}: {v}" for k, v in history.items()]),
+                ),
             agent=agent,
-            expected_output="A text output which has throughly resarched the topic in depth like if you were the best in it ",
+            expected_output={
+                "literature_review":"dict",
+                "methodology_analysis:":"dict",
+                "key_findings":"list",
+                "research_gaps": "list",
+                "future_directions": "list"
+                },
+            context=[self.task_question]
         )
 
-    def format_resarch(self, agent,resarch_outcomes):
+    def format_research(self, agent, research_outcomes: dict) :
+        """Format research findings into LaTeX-compatible structure"""
         return Task(
-            description=f"Given a resarch insights summarize it in a way that caan be latex compaatible to build a resarch paper of minimum 4 pages:{resarch_outcomes}",
-            agent=agent,
-            expected_output="A proper summarized latex comptible resarch paper ready formated text and also provide the resarch a name"
-        )
+            description=f"""Format the research findings into a LaTeX-compatible academic paper structure:
 
-    def task_convert_Latex(self, agent,formated_resarch,resarch_name):
-        return Task(
-            description=f"Convert the  latex compatible resarch outcomes to latex code and save it to a .tex file.:{formated_resarch} and give it a name {resarch_name}.tex",
+            RESEARCH CONTENT:
+            {research_outcomes}
+            
+            REQUIREMENTS:
+            1. Structure should include:
+               - Abstract
+               - Introduction
+               - Literature Review
+               - Methodology
+               - Results/Findings
+               - Discussion
+               - Future Work
+               - Conclusion
+            2. Minimum length: 4 pages
+            3. Follow academic writing style
+            4. Include proper citations
+            5. Generate appropriate paper title
+            """,
             agent=agent,
-            expected_output="A latex code of the resarch outcome in proper research paper formmat and also a name to it ",
-            output_file=f"output/{resarch_name}.tex"
+            expected_output={
+                "title": "str",
+                "formatted_content": "dict",
+            },
+            context=[self.task_research]
+        )
+        
+    def task_convert_latex(self, agent, formatted_research: dict, research_name: str) :
+        """Convert formatted research into complete LaTeX document"""
+        return Task(
+            description=f"""Generate complete LaTeX code for the research paper:
+            CONTENT:
+            {formatted_research}
+            
+            REQUIREMENTS:
+            1. Use appropriate document class (e.g., 'article', 'paper')
+            2. Implement proper sectioning
+            3. Follow academic paper formatting guidelines
+        
+            
+            Save as: {research_name}.tex
+            Using the  tools provided :
+            1.latex_writer_tool 
+            """,
+            agent=agent,
+            expected_output="str",              
+            output_file=f"output/{research_name}.tex",
+            context=[self.format_research],
         )
     
-    def task_convert_latex_to_pdf_and_save(self,agent,latex_file_name):
+    def task_convert_latex_to_pdf(self, agent, latex_file_name: str):
+        """Convert LaTeX file to PDF"""
         return Task(
-            description=f'Convert a given latex file to pdf and save it user directory:{latex_file_name}',
+            description=f"""Compile LaTeX file to PDF:
+            
+            FILE: {latex_file_name}
+            
+            REQUIREMENTS:
+            1. Verify LaTeX syntax
+            2. Generate PDF with proper formatting
+            """,
             agent=agent,
-            expected_output=f"A pdf file with compiled latex code in it as a research paper",
-            output_file=f"output/{latex_file_name}.pdf" 
+            expected_output="PDF file path",
+            output_file=f"output/{latex_file_name}.pdf",
+            context=[self.task_convert_latex],
         )
         
     # todo : add task to store papers in faiss
