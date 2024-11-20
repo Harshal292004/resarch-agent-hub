@@ -6,72 +6,95 @@ from langchain.chains import ConversationChain
 
 load_dotenv()
 
-def process_interaction():
-    """Process the user interaction with a predefined prompt template and return full conversation"""
+def create_research_agent():
+    """Create and configure the research-focused chat agent"""
     
-    # Get initial user input 
-    user_question = input("Hola: ")
-    
-    # Define a template with placeholders for dynamic insertion 
-    prompt_template = """ 
-    You are a helpful assistant. Here are some instructions: 
-    1. You are here to take more insights on the user's question. 
-    2. Ask some intriguing questions so that you can understand what the user knows about the topic. 
-    3. Don't get into much depth; ask what the user is trying to research for. 
-
-    Current conversation: {history}
-    User's Question: {user_question}
-    """
-    
-    # Initialize the ChatGroq model
     llm = ChatGroq(
         model="llama3-8b-8192",
-        temperature=0,
+        temperature=0.7,
         max_tokens=None,
         timeout=None,
         max_retries=2,
     )
 
-    # Memory to keep track of the conversation
-    memory = ConversationBufferMemory(
-        return_messages=True,
-        memory_key="history"
-    )
+    # Enhanced prompt template with corrected input variables
+    prompt_template = """You are an intelligent research assistant focused on helping users develop academic projects and research.
 
-    # Create a PromptTemplate with the defined instructions 
+    Key Objectives:
+    1. Understand the core research topic or project goal
+    2. Identify knowledge gaps and technical requirements
+    3. Provide relevant suggestions and insights
+    4. Maintain context throughout the conversation
+    
+    Conversation Guidelines:
+    - Ask focused, relevant follow-up questions (max 2 per response)
+    - Build upon previous responses
+    - Provide specific examples or suggestions when possible
+    - Guide the conversation towards practical next steps
+    
+    Previous Conversation: {history}
+    Human: {input}
+    
+    Assistant:"""
+
+    # Corrected memory configuration
+    memory = ConversationBufferMemory()
+
+    # Create prompt template with correct input variables
     template = PromptTemplate(
-        input_variables=["history", "user_question"], 
+        input_variables=["history", "input"],
         template=prompt_template
     )
 
-    # Create the ConversationChain
-    chain = ConversationChain(
+    return ConversationChain(
         llm=llm,
-        memory=memory,
         prompt=template,
+        memory=memory,
         verbose=True
     )
 
-    # Initialize user response
-    user_response = ""
-
-    # Conversation loop
-    while user_response.lower() != "sufficient":
-        # Use the chain to generate a response based on the user's question
-        response = chain.predict(user_question=user_question)
-        print(response)
-
-        # Get new input from the user
-        user_response = input("Your response (type 'sufficient' to end): ")
+def process_interaction():
+    """Process the user interaction with improved context management and flow"""
+    
+    print("Research Assistant: Hello! I'm here to help with your research project. What would you like to explore?")
+    
+    chain = create_research_agent()
+    conversation_active = True
+    
+    while conversation_active:
+        # Get user input
+        user_input = input("\nYou: ")
         
-        # Update user_question for next iteration
-        user_question = user_response
+        if user_input.lower() == 'exit':
+            conversation_active = False
+            continue
 
-    # Return the entire conversation memory
-    return memory.chat_memory.messages
+        # Generate response
+        try:
+            response = chain.predict(input=user_input)
+            print("\nResearch Assistant:", response)
+        except Exception as e:
+            print(f"An error occurred: {str(e)}")
+            print("Please try again or type 'exit' to end the conversation.")
 
-# Call the function and print the conversation
-conversation = process_interaction()
-print("\nFull Conversation:")
-for message in conversation:
-    print(f"{message.type}: {message.content}")
+    return chain.memory.chat_memory.messages
+
+def format_conversation(messages):
+    """Format the conversation history in a readable way"""
+    print("\n=== Conversation Summary ===")
+    for i, message in enumerate(messages, 1):
+        role = "Human" if message.type == "human" else "Assistant"
+        print(f"\n{i}. {role}:")
+        print(message.content)
+        print("-" * 50)
+
+def main():
+    """Main function to run the research assistant"""
+    try:
+        conversation = process_interaction()
+        format_conversation(conversation)
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+
+if __name__ == "__main__":
+    main()
