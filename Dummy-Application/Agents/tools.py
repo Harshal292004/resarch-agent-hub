@@ -1,14 +1,14 @@
-from crewai_tools import tool
-from crewai_tools.tools import FileReadTool
 import os
+import io
+import re
+import PyPDF2
 import subprocess
 import requests
-import re
 import urllib.request as libreq
 from bs4 import BeautifulSoup
 from urllib.parse import quote
-import PyPDF2
-import io
+from crewai_tools import tool
+
 """ 
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.embeddings import HuggingFaceBgeEmbeddings
@@ -19,6 +19,7 @@ from langchain.prompts import PromptTemplate
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationChain
 from langchain_groq import ChatGroq
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -113,7 +114,7 @@ class ResearcherToolSet:
         return self.format_conversation(chain.memory.chat_memory.messages)
         
         
-    # resarcher tools
+    # researcher tools
     @tool
     def arxiv_research_tool(
         author, title, category, sortBy, maxResults=1, sortOrder="ascending"
@@ -262,12 +263,12 @@ class ResearcherToolSet:
     
      # for latex writer
     @tool
-    def latex_writer_tool( resarch_latex_code, file_name: str):
+    def latex_writer_tool( research_latex_code, file_name: str):
         """
         Processes and writes LaTeX content to a .tex file.
 
         Args:
-            resarch_latex (str): The LaTeX content to write into the file.
+            research_latex (str): The LaTeX content to write into the file.
             file_name (str): The name of the research document.
 
         Returns:
@@ -279,14 +280,14 @@ class ResearcherToolSet:
 
         try:
             with open(file_name, "w") as file:
-                file.write(resarch_latex_code)
+                file.write(research_latex_code)
         except Exception as e:
             return f"Error while creating the file: {str(e)}"
 
 
     # for latex  to pdf
     @tool
-    def convert_latex_to_pdf(self, latex_file_name,output_directory="Your Resarchers"):
+    def convert_latex_to_pdf(self, latex_file_name,output_directory="Your Researchers"):
         """returns a pdf file with latex written
 
         Args:
@@ -357,7 +358,7 @@ class ResearcherToolSet:
             ResearcherToolSet.latex_writer_tool
         ]   
     
-    def resarch_tools():
+    def research_tools():
         return[
             ResearcherToolSet.arxiv_research_tool,
             ResearcherToolSet.load_document,    

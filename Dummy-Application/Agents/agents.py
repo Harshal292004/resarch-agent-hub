@@ -1,12 +1,9 @@
-from crewai import Agent, LLM
 import os
+from crewai import Agent, LLM
 from dotenv import load_dotenv
-
-
 from tools import ResearcherToolSet
 
 load_dotenv()
-
 
 class Agents:
     def __init__(self):
@@ -28,37 +25,37 @@ class Agents:
             verbose=False
         )     
         
-    # this agent will do the resarch and provide a raw format data from the web etc 
+    # this agent will do the research and provide a raw format data from the web etc 
     def research_agent(self ):
         return Agent(
             llm=self.llm,
             role='Researcher',
             goal=f"Conduct thorough research on the question and summarize findings ",
-            backstory="You are a researcher who performs in-depth research to provide accurate answers.",
+            backstory="You are a researcher who performs in-depth academic research.",
             allow_delegation=True,
-            tools=ResearcherToolSet.resarch_tools(),
+            tools=ResearcherToolSet.research_tools(),
             verbose=False
         )
     
     
-    def resarch_sumarizer_agent(self):
+    def research_summarizer_agent(self):
         return Agent(
             llm=self.llm,
-            role='Resarch Summarizer',
-            goal="Convert the cluttered resarch into a summaried format which can be converted   to LaTeX code",
-            backstory="You are an expert in converting cluttered resarch  into  strucutred and summarized format for research papers.",
+            role='Research Summarizer',
+            goal="Convert the cluttered research into a summaried format which can be converted   to LaTeX code",
+            backstory="You are an expert in converting cluttered research  into  strucutred and summarized format for research papers.",
             allow_delegation=True,
             verbose=False
         )
     
     
-    # this agent will  convert the unstructured resarch of the resarch agent to a latex format and convert to pdf 
+    # this agent will  convert the unstructured research of the research agent to a latex format and convert to pdf 
     def latex_converter_agent(self):
         return Agent(
             llm=self.llm,
             role='LaTeX Converter ',
-            goal="Convert the given formated resarch to latex code and then save it to latex file",
-            backstory="You are an expert in converting format resarch  into LaTeX code for research papers.",
+            goal="Convert the given formated research to latex code and then save it to latex file",
+            backstory="You are an expert in converting format research  into LaTeX code for research papers.",
             allow_delegation=True,
             verbose=False,
             tools=ResearcherToolSet.latex_conver_tools()

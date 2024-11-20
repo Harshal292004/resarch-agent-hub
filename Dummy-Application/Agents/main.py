@@ -3,33 +3,55 @@ from agents import Agents
 from tasks import Tasks
 from tools import ResearcherToolSet
 from dotenv import load_dotenv
-
+import os 
 def main():
     load_dotenv()
-
     
-    print("## Welcome to the resarch paper generator ")
-    print('-'*20)
+    # Create output directory if it doesn't exist
+    os.makedirs("output", exist_ok=True)
     
-    tasks=Tasks()
-    agents_=Agents()
+    print("## Welcome to the Research Paper Generator")
+    print('-'*50)
+    
+    # Initialize tasks and agents
+    tasks_manager = Tasks()
+    agents_manager = Agents()
     
     # Create agents
-    questioning_agent = agents_.questioning_agent()
-    research_agent = agents_.research_agent()
-    research_summarizer_agent = agents_.resarch_sumarizer_agent()
-    latex_converter_agent = agents_.latex_converter_agent()
-    latex_to_pdf_agent = agents_.latex_to_pdf_agent()
+    questioning_agent = agents_manager.questioning_agent()
+    research_agent = agents_manager.research_agent()
+    research_summarizer_agent = agents_manager.research_summarizer_agent()
+    latex_converter_agent = agents_manager.latex_converter_agent()
+    latex_to_pdf_agent = agents_manager.latex_to_pdf_agent()
     
+    # Create task instances
+    task1 = tasks_manager.task_question(
+        agent=questioning_agent
+    )
     
-    task_question=tasks.task_question(agent=questioning_agent,answer='')
-    task_resarch=tasks.task_resarch(agent=research_agent,user_question='',llm_answers='')
-    format_resarch=tasks.format_research(agent=research_summarizer_agent,resarch_outcomes='')
-    task_convert_latex=tasks.task_convert_latex(agent=latex_converter_agent,resarch_name='')
-    task_convert_latex_to_pdf=tasks.task_convert_latex_to_pdf(agent=latex_to_pdf_agent,latex_file_name='')
+    task2 = tasks_manager.task_research(
+        agent=research_agent,
+        history={}  # This will be populated by task1's output
+    )
     
+    task3 = tasks_manager.format_research(
+        agent=research_summarizer_agent,
+        research_outcomes={}  # This will be populated by task2's output
+    )
     
-    crew=Crew(
+    task4 = tasks_manager.task_convert_latex(
+        agent=latex_converter_agent,
+        formatted_research={},  # This will be populated by task3's output
+        research_name="research_paper"  # This will be updated based on the research topic
+    )
+    
+    task5 = tasks_manager.task_convert_latex_to_pdf(
+        agent=latex_to_pdf_agent,
+        latex_file_name="research_paper"  # This will be updated based on task4's output
+    )
+    
+    # Create crew with sequential tasks
+    crew = Crew(
         agents=[
             questioning_agent,
             research_agent,
@@ -38,47 +60,16 @@ def main():
             latex_to_pdf_agent
         ],
         tasks=[
-            lambda: tasks.task_question(
-                agent=questioning_agent
-            ),
-            
-            # Task 2: Research based on conversation history
-            lambda conversation: tasks.task_resarch(
-                agent=research_agent,
-                history=conversation
-            ),
-            
-            lambda research_data:tasks.format_research(
-                agent=research_summarizer_agent,
-                research_outcomes={
-                    'literature_review': research_data.get('literature_review', {}),
-                    'methodology_analysis': research_data.get('methodology_analysis', {}),
-                    'key_findings': research_data.get('key_findings', []),
-                    'research_gaps': research_data.get('research_gaps', []),
-                    'future_directions': research_data.get('future_directions', [])
-                }
-            ),
-            
-            # Task 4: Convert to LaTeX
-            lambda formatted_data: tasks.task_convert_latex(
-                agent=latex_converter_agent,
-                formatted_research={
-                    'title': formatted_data.get('title', ''),
-                    'formatted_content': formatted_data.get('formatted_content', {}),
-                },
-                research_name=formatted_data.get('title', 'research_paper').replace(" ", "_").lower()
-            ),
-            
-            # Task 5: Convert LaTeX to PDF
-            lambda latex_path: tasks.task_convert_latex_to_pdf(
-                agent=latex_to_pdf_agent,
-                latex_file_name=latex_path
-            )
+            task1,
+            task2,
+            task3,
+            task4,
+            task5
         ],
         process="sequential",
-        
-    ) 
-        
+        verbose=True
+    )
+      
     # Execute research paper generation workflow
     result = crew.kickoff()
     
