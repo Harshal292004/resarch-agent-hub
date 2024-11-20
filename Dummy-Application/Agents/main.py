@@ -32,10 +32,24 @@ def main():
         tasks=[task1],
         verbose=True
     )
+   
     conversation_result = crew1.kickoff()
-    print(f"Conversation Result: {conversation_result}")
+    conversation_result_dict = conversation_result.to_dict()  # Use .to_dict() if supported
+    conversation_history = conversation_result_dict["conversation_history"]
+    print(conversation_history)
+    print(f"Conversation Result: {conversation_result.raw.Conversation_History}")
+    conversation_history_direct = conversation_result.conversation_history  # Use attribute access
+    print(conversation_history_direct)
+
+    """ task2= tasks_manager.task_research(research_agent,conversation_result.get("Conversation History"))
+    crew2=Crew(
+        agents=[research_agent],
+        tasks=[task2],
+        verbose=True
+    )
+    research_result=crew2.kickoff()
+    print(f"Research Result: {research_result}") """
     
-    task2= tasks_manager.task_research(Tasks)
     """ # Create tasks
     task1 = tasks_manager.task_question(questioning_agent)
     task2 = tasks_manager.task_research(research_agent)
