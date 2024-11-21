@@ -24,6 +24,8 @@ from langchain_groq import ChatGroq
 from dotenv import load_dotenv
 from QuestioningTool import QuestioningTool
 from tasks import OutputModel
+from ResearchTool import ResearchTool
+from ExaSearchToolset import ExaSearchToolset
 load_dotenv()
 
 class ResearcherToolSet:
@@ -61,154 +63,7 @@ class ResearcherToolSet:
             conversation=conversation_dict
         )
         return output
-        
-        
-    # researcher tools
-    @tool
-    def arxiv_research_tool(
-        author, title, category, sortBy, maxResults=1, sortOrder="ascending"
-    ):
-        """_summary_
 
-        Args:
-            author (_type_): _description_
-            title (_type_): _description_
-            category (_type_): _description_
-            sortBy (_type_): _description_
-            maxResults (int, optional): _description_. Defaults to 1.
-            sortOrder (str, optional): _description_. Defaults to "ascending".
-
-        Returns:
-            _type_: _description_
-        """
-
-
-        # 1. Input validation
-        if not any([author, title, category]):
-            return "Error: At least one search parameter (author, title, or category) must be provided"
-
-        # 2. Build search query more flexibly
-        # quote is used to add http safe searches
-        search_parts = []
-        if author:
-            search_parts.append(f"au:{quote(author)}")
-        if title:
-            search_parts.append(f"ti:{quote(title)}")
-        if category:
-            search_parts.append(f"cat:{quote(category)}")
-
-        search_query = "+AND+".join(search_parts)
-
-        # 3. Validate maxResults
-        maxResults = min(max(1, maxResults), 4)
-
-        # 4. Validate sortOrder
-        valid_sort_orders = ["ascending", "descending"]
-        sortOrder = (
-            sortOrder.lower() if sortOrder.lower() in valid_sort_orders else "ascending"
-        )
-
-        # 5. Validate sortBy
-        valid_sort_by = ["relevance", "lastUpdatedDate", "submittedDate"]
-
-        if sortBy not in valid_sort_by:
-            sortBy = "relevance"
-
-        try:
-            base_url = "http://export.arxiv.org/api/query"
-            params = {
-                "search_query": search_query,
-                "max_results": maxResults,
-                "sortBy": sortBy,
-                "sortOrder": sortOrder,
-            }
-
-            url = f"{base_url}?{'&'.join(f'{k}={v}' for k, v in params.items())}"
-
-            # 7. Make request with timeout
-            with libreq.urlopen(url, timeout=10) as response:
-                xml_data = response.read().decode("utf-8")
-
-                # 8. Parse XML
-                soup = BeautifulSoup(xml_data, "xml")
-                entries = soup.find_all("entry")
-                data = []
-                for entry in entries:
-                    entry_data = {
-                        "summary": (
-                            entry.find("summary").text.strip()
-                            if entry.find("summary")
-                            else None
-                        ),
-                        "link": (
-                            entry.find("link", title="pdf")["href"]
-                            if entry.find("link", title="pdf")
-                            else None
-                        ),
-                    }
-                    data.append(entry_data)
-
-            return data
-        except Exception as e:
-            return f"Error occurred: {str(e)}"
-    
-    @tool
-    def load_document(self,file_path_url):
-        """_summary_
-
-        Args:
-            file_path_url (_type_): _description_
-
-        Returns:
-            _type_: _description_
-        """
-        try:
-            response=requests.get(file_path_url)
-            response.raise_for_status() # Raise an exception for bad status codes
-            
-            pdf_file_obj=io.BytesIO(response.content)
-            
-            pdf_reader=PyPDF2.PdfReader(pdf_file_obj)
-            
-            text=""
-            
-            num_pages=min(2,len(pdf_reader.pages))
-            
-            for page_num in range(num_pages):
-                text+=pdf_reader.pages[page_num].extract_text()
-
-            return text
-        except requests.RequestException as e:
-            print(f"Error occured:{e}")
-            return None
-        except Exception as e:
-            print(f"Error occured in processing of pdf:{e}")
-            return None 
-    
-    @tool
-    def search(query: str):
-        """Search for a webpage based on the query."""
-        return ResearcherToolSet._exa().search(f"{query}", use_autoprompt=True, num_results=3)
-    
-    @tool
-    def find_similar(url: str):
-        """Search for webpages similar to a given URL.
-        The url passed in should be a URL returned from `search`.
-        """
-        return ResearcherToolSet._exa().find_similar(url, num_results=3)
-
-    @tool
-    def get_contents(ids: str):
-        """Get the contents of a webpage.
-        The ids must be passed in as a list, a list of ids returned from `search`.
-        """
-        ids = eval(ids)
-
-        contents = str(ResearcherToolSet._exa().get_contents(ids))
-        contents = contents.split("URL:")
-        contents = [content[:1000] for content in contents]
-        return "\n\n".join(contents)
-        
     
      # for latex writer
     @tool
@@ -308,13 +163,13 @@ class ResearcherToolSet:
         ]   
     
     def research_tools():
-        return[
-            ResearcherToolSet.arxiv_research_tool,
-            ResearcherToolSet.load_document,    
-            ResearcherToolSet.search,
-            ResearcherToolSet.find_similar,
-            ResearcherToolSet.get_contents
+        web_search_tools = ExaSearchToolset.tools()
+        return [
+            ResearchTool.arxiv_research_tool,
+            ResearchTool.load_document,
+            *web_search_tools  # Spread the tools from web_search_tools into the list
         ]
+
         
     def questioning_tools():
         return[
