@@ -53,12 +53,12 @@ class ResearcherToolSet:
             except Exception as e:
                 print(f"An error occurred: {str(e)}")
                 print("Please try again or type 'exit' to end the conversation.")
-        # indent makes it prettty print 
+        # Format the conversation directly as a dictionary
         conversation_dict = question_tool.format_conversation(chain.memory.chat_memory.messages)
         
-        # Create an OutputModel instance
+        # Create an OutputModel instance with the dictionary
         output = OutputModel(
-            conversation=str(conversation_dict),
+            conversation=conversation_dict
         )
         return output
         

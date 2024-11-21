@@ -5,7 +5,7 @@ from typing import Dict, Any
 
 # Create a Pydantic model to represent the output structure
 class OutputModel(BaseModel):
-    conversation:str
+    conversation:Dict[str, str]
 class Tasks:
         
     def task_question(self, agent):
@@ -17,7 +17,7 @@ class Tasks:
         )
         
     
-    def task_research(self, agent, conversation_data: Dict[str, Any]) -> Task:
+    def task_research(self, agent, conversation_data: Dict[str,str]) -> Task:
         research_template = """
         Conduct thorough academic research based on the provided conversation:
         
@@ -45,12 +45,6 @@ class Tasks:
             expected_output="A structured dictionary with 'abstract, literature_review, methodology, results, conclusion'",
             agent=agent
         )
-    
-    def parse_coversation(conversation_str:str):
-        conversation_dict={}
-        conversation_parts=conversation_str.split('\n')
-        for i,part in enumerate(conversation_parts):
-            conversation_dict[f'{i}']=part
             
             
     def format_research(self, agent, research_outcomes: Dict[str, Any]) -> Task:

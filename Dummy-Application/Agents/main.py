@@ -35,8 +35,11 @@ def main():
     
     conversation_result = crew1.kickoff()
     print(f"Conversation_result type: {type(conversation_result)}")
+    print(f"Convcersation dict type:{type(conversation_result.to_dict())}")
+    print(f"Convertsation outcome:{conversation_result.to_dict()['conversation']}")
     
-    task2=tasks_manager.task_research(research_agent,conversation_result.to_dict())
+
+    task2=tasks_manager.task_research(research_agent,conversation_result.to_dict()['conversation'])
     crew2=Crew(
         agents=[research_agent],
         tasks=[task2],
@@ -45,12 +48,9 @@ def main():
     
     research_outcomes= crew2.kickoff()
     print(f"Research outcomes type: {type(research_outcomes)}")
-    print(f"Research outcomes:{research_outcomes}")
+    print(f"Research outcomes:{research_outcomes}") 
     
-    
-    """  
-    
-        
+    """ 
     task3=tasks_manager.format_research(research_summarizer_agent)
     crew3= Crew(
         agents=[research_summarizer_agent],
