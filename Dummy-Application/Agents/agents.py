@@ -35,9 +35,21 @@ class Agents:
         return Agent(
             llm=self.llm,
             role='Researcher',
-            goal=f"Conduct thorough research on the question and summarize findings ",
-            backstory="You are a researcher who performs in-depth academic research.",
-            allow_delegation=True,
+            goal=f"Conducting through research on the  conversation of user and llm using the tools arxiv_research_tool , load_document , search ,find_similar,get_content ",
+            backstory="""You are a researcher who performs in-depth academic research over varied academic subjects using the following tools 
+            
+            1.arxiv_research_tool for searching through research paperss of renowned researchers 
+            2.load_document for loading pdf documents using web urls 
+            3.search  for  searching content on the web 
+            4.find_similar  for searching  webpages similar to a given URL.
+            5.get_content for getting the contents of the web pages 
+            
+            -Always stay focused on the research you are doing
+            -Try to collect as much refrence using tools as possible 
+            -use the tools multiple times as you wish 
+            -Do very indepth research on the topics given 
+            """,
+            allow_delegation=False,
             tools=ResearcherToolSet.research_tools(),
             verbose=False,
         )

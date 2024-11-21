@@ -18,34 +18,62 @@ class Tasks:
         
     
     def task_research(self, agent, conversation_data: Dict[str,str]) -> Task:
+        
         research_template = """
-        Conduct thorough academic research based on the provided conversation:
-        
-        CONVERSATION CONTEXT:
+        COMPREHENSIVE RESEARCH PROTOCOL:
+
+        RESEARCH CONTEXT:
         {conversation}
-        
-        RESEARCH REQUIREMENTS:
-        1. Analyze key topics and research questions identified
-        2. Conduct literature review covering:
-        - Recent academic papers (last 5 years)
-        - Seminal works in the field
-        - Current state-of-the-art
-        3. Identify and document:
-        - Methodologies used
-        - Key findings
-        - Research gaps
-        - Future directions
+
+        DETAILED RESEARCH REQUIREMENTS:
+        1. Systematic Literature Review
+        - Minimum 10-15 peer-reviewed sources
+        - Cover publications from last 5 years
+        - Include seminal works in the field
+        - Use ArXiv and other academic databases
+
+        2. Research Analysis Framework:
+        a) Background and Current State
+        - Historical context
+        - Evolution of research topic
+        - Current technological/scientific landscape
+
+        b) Methodology Deep Dive
+        - Comparative analysis of research approaches
+        - Strengths and limitations of existing methodologies
+        - Innovative techniques and emerging trends
+
+        c) Empirical Evidence
+        - Quantitative and qualitative data analysis
+        - Statistical significance
+        - Reproducibility of findings
+
+        3. Critical Analysis
+        - Identify research gaps
+        - Propose potential future research directions
+        - Discuss potential real-world applications
+
+        4. Comprehensive Documentation
+        - Structured academic report
+        - Detailed references (APA/IEEE format)
+        - In-text citations
+        - Potential follow-up research questions
+
+        OUTPUT REQUIREMENTS:
+        - Structured academic report
+        - Include full bibliography
+        - Cite at least 15 sources
         """
         
         # Format conversation data into a string
         conversation = "\n".join([f"{k}: {v}" for k, v in conversation_data.items()]) if conversation_data else "No conversation context provided."
-    
+        
         return Task(
             description=research_template.format(conversation=conversation),
-            expected_output="A structured dictionary with 'abstract, literature_review, methodology, results, conclusion'",
-            agent=agent
+            expected_output="A structured dictionary with comprehensive research report of abstract, literature review, methodology, results, conclusion, and full references",
+            agent=agent,
+            async_execution=True,  # Allow parallel processing
         )
-            
             
     def format_research(self, agent, research_outcomes: Dict[str, Any]) -> Task:
         

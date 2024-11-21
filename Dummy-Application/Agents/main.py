@@ -34,6 +34,8 @@ def main():
     )
     
     conversation_result = crew1.kickoff()
+    
+    print(f"Conversation_result: {conversation_result}")
     print(f"Conversation_result type: {type(conversation_result)}")
     print(f"Convcersation dict type:{type(conversation_result.to_dict())}")
     print(f"Convertsation outcome:{conversation_result.to_dict()['conversation']}")

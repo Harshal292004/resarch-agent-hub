@@ -8,7 +8,9 @@ from crewai_tools import tool
 class ResearchTool:
     def __init__(self):
         pass
+    
     @staticmethod
+    @tool
     def load_document(file_path_url):
         """This tool helps in loading documents and extracting text from them for research purpose 
         
@@ -28,7 +30,7 @@ class ResearchTool:
             
             text=""
             
-            num_pages=min(2,len(pdf_reader.pages))
+            num_pages=min(4,len(pdf_reader.pages))
             
             for page_num in range(num_pages):
                 text+=pdf_reader.pages[page_num].extract_text()
@@ -42,8 +44,9 @@ class ResearchTool:
             return None 
 
         
-        
+       
     @staticmethod
+    @tool
     def arxiv_research_tool(author=None,title=None,category=None, sortBy="relevance", maxResults=1, sortOrder="ascending",extract_text=True, ) -> dict:
         """
         Advanced tool for searching and extracting research papers from ArXiv.
@@ -87,7 +90,8 @@ class ResearchTool:
         """
         # Input validation
         if not any([author, title, category]):
-            raise ValueError("At least one search parameter must be provided")
+            print(f"No parameter specfied defaulting to cs.AI")
+            category="cs.AI"
 
         # Validate and prepare search parameters
         search_parts = []
@@ -153,31 +157,3 @@ class ResearchTool:
         return result
     
     
-    
-    
-        
-# Additional dependencies to install:
-# pip install requests beautifulsoup4 PyPDF2
-
-
-result = ResearchTool.arxiv_research_tool(
-    author="Yann LeCun", 
-    category="cs.AI", 
-    maxResults=2,
-    extract_text=True
-)
-
-
-print("Title"+"-"*20+"Title")
-# Access results
-for paper in result['papers']:
-    print(paper['title'])
-
-print("Text"+"-"*20+"Text")
-# Access extracted texts
-for text in result['extracted_texts']:
-    print(text[:500])  # First 500 characters
-
-# Check for any errors
-if result['errors']:
-    print("Errors:", result['errors'])
