@@ -26,11 +26,12 @@ class Agents:
             - Do not deviate from the original interaction""",
             allow_delegation=False,  # Prevent deviation
             tools=ResearcherToolSet.questioning_tools(),
-            verbose=False
+            verbose=False,
+            max_iter=1
         ) 
         
     # this agent will do the research and provide a raw format data from the web etc 
-    def research_agent(self ):
+    def research_agent(self):
         return Agent(
             llm=self.llm,
             role='Researcher',
@@ -38,7 +39,7 @@ class Agents:
             backstory="You are a researcher who performs in-depth academic research.",
             allow_delegation=True,
             tools=ResearcherToolSet.research_tools(),
-            verbose=False
+            verbose=False,
         )
     
     

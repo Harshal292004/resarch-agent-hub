@@ -4,14 +4,16 @@ from pydantic import BaseModel
 from typing import Dict, Any
 
 # Create a Pydantic model to represent the output structure
-
+class OutputModel(BaseModel):
+    conversation:str
 class Tasks:
         
     def task_question(self, agent):
         return Task(
             description="Use process_interaction tool to gather initial research information",
-            expected_output="A structured dictionary with keys: 'conversation' and 'initial_research_requirements'",
+            expected_output="A structured dictionary with key: 'conversation'",
             agent=agent,
+            output_json=OutputModel
         )
         
     
@@ -43,12 +45,20 @@ class Tasks:
             expected_output="A structured dictionary with 'abstract, literature_review, methodology, results, conclusion'",
             agent=agent
         )
-        
+    
+    def parse_coversation(conversation_str:str):
+        conversation_dict={}
+        conversation_parts=conversation_str.split('\n')
+        for i,part in enumerate(conversation_parts):
+            conversation_dict[f'{i}']=part
+            
+            
     def format_research(self, agent, research_outcomes: Dict[str, Any]) -> Task:
+        
         return Task(
             description=f"""Format the research findings into a LaTeX-compatible academic paper structure:
             RESEARCH CONTENT:
-            {research_outcomes}
+            {research_outcomes['conversation']}
             
             REQUIREMENTS:
             1. Structure should include:

@@ -6,6 +6,7 @@ import subprocess
 import requests
 import urllib.request as libreq
 from bs4 import BeautifulSoup
+import json
 from urllib.parse import quote
 from crewai_tools import tool
 
@@ -22,7 +23,7 @@ from langchain_groq import ChatGroq
 
 from dotenv import load_dotenv
 from QuestioningTool import QuestioningTool
-
+from tasks import OutputModel
 load_dotenv()
 
 class ResearcherToolSet:
@@ -52,8 +53,14 @@ class ResearcherToolSet:
             except Exception as e:
                 print(f"An error occurred: {str(e)}")
                 print("Please try again or type 'exit' to end the conversation.")
-
-        return question_tool.format_conversation(chain.memory.chat_memory.messages)
+        # indent makes it prettty print 
+        conversation_dict = question_tool.format_conversation(chain.memory.chat_memory.messages)
+        
+        # Create an OutputModel instance
+        output = OutputModel(
+            conversation=str(conversation_dict),
+        )
+        return output
         
         
     # researcher tools
