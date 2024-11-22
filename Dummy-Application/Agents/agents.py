@@ -13,10 +13,16 @@ class Agents:
             api_key=os.environ.get("GROQ_API_KEY")
         )
         
+        self.qwen_llm=LLM(
+            model="huggingface/Qwen/Qwen2.5-Coder-7B-Instruct",
+            api_key=os.getenv("HUGGINGFACEHUB_API_KEY"),
+            base_url="https://api-inference.huggingface.co/models"
+        )
+        
     # this agent will question  the user and take his her queries 
     def questioning_agent(self):
         return Agent(
-            llm=self.llm,
+            llm=self.qwen_llm,
             role='Questioner',
             goal="Consistently capture user research requirements using process_interaction tool",
             backstory="""You are a systematic data capture agent. 
@@ -32,7 +38,7 @@ class Agents:
   
     def research_agent(self):
         return Agent(
-            llm=self.llm,
+            llm=self.qwen_llm,
             role='Researcher',
             goal="""Conduct comprehensive academic research following a structured methodology to produce 
                   detailed analysis and findings in the specified output format.""",
@@ -69,7 +75,7 @@ class Agents:
         
     def research_summarizer_agent(self):
         return Agent(
-            llm=self.llm,
+            llm=self.qwen_llm,
             role='Research Summarizer',
             goal="Convert the cluttered research into a summaried format which can be converted   to LaTeX code",
             backstory="You are an expert in converting cluttered research  into  strucutred and summarized format for research papers.",
@@ -81,7 +87,7 @@ class Agents:
     # this agent will  convert the unstructured research of the research agent to a latex format and convert to pdf 
     def latex_converter_agent(self):
         return Agent(
-            llm=self.llm,
+            llm=self.qwen_llm,
             role='LaTeX Converter ',
             goal="Convert the given formated research to latex code and then save it to latex file",
             backstory="You are an expert in converting format research  into LaTeX code for research papers.",
@@ -92,7 +98,7 @@ class Agents:
     
     def latex_to_pdf_agent(self):
         return Agent(
-            llm=self.llm,
+            llm=self.qwen_llm,
             role="Latex to Pdf saver",
             goal='Given a latex file find it and convert it to a pdf using the tools provided',
             backstory='You are skilled in conveerting given latex file to a pdf file',
