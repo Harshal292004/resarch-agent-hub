@@ -40,20 +40,18 @@ def main():
     print(f"Convcersation dict type:{type(conversation_result.to_dict())}")
     print(f"Convertsation outcome:{conversation_result.to_dict()['conversation']}")
     conversation_dict=conversation_result.to_dict()['conversation']
-    try:
-        task2=tasks_manager.task_research(research_agent,conversation_dict)
-        crew2=Crew(
-            agents=[research_agent],
-            tasks=[task2],
-            verbose=True
-        )     
-        research_outcomes= crew2.kickoff()
-        print(f"Research outcomes type: {type(research_outcomes)}")
-        print(f"Research outcomes:{research_outcomes}") 
-        
-    except Exception:
-        print("Ben cho yaha error tha !!!!")    
     
+    task2=tasks_manager.task_research(research_agent,conversation_dict)
+    crew2=Crew(
+        agents=[research_agent],
+        tasks=[task2],
+        verbose=True
+    )     
+    research_outcomes= crew2.kickoff()
+    print(f"Research outcomes type: {type(research_outcomes)}")
+    print(f"Research outcomes:{research_outcomes}") 
+    
+
     
     """ 
     task3=tasks_manager.format_research(research_summarizer_agent)

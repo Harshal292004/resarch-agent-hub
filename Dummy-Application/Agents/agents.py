@@ -37,25 +37,8 @@ class Agents:
             goal="""Conduct comprehensive academic research following a structured methodology to produce 
                   detailed analysis and findings in the specified output format.""",
             backstory="""You are an expert research analyst with deep expertise in systematic literature review 
-            and academic research synthesis. You follow these strict tool usage guidelines:
-
-            1. arxiv_research_tool Usage:
-            - Input format:
-            {
-                "title": "specific keywords",
-                "category": "cs.AI or cs.CV",
-                "max_results": 4,
-                "extract_text": true,
-                "sort_by": "relevance",
-                "sort_order": "descending"
-            }
+            and academic research synthesis.
             
-            2. load_document Usage:
-            - Input format:
-            {
-                "file_path_url": "https://arxiv.org/pdf/cs/9308101v1.pdf"
-            }
-
             RESEARCH METHODOLOGY:
             1. Literature Collection:
                - Perform multiple targeted searches

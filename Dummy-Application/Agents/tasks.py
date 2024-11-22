@@ -2,10 +2,10 @@ from crewai import  Task
 from typing import Dict, Any
 from pydantic import BaseModel
 from typing import Dict, Any
-
-# Create a Pydantic model to represent the output structure
+    
 class OutputModel(BaseModel):
-    conversation:Dict[str, str]
+    conversation:Dict[str,str]
+
 class Tasks:
         
     def task_question(self, agent):
@@ -17,26 +17,17 @@ class Tasks:
         )
     
     
-    
     def task_research(self, agent, conversation: Dict[str, str]) -> Task:
+        print(f"Converstaion in:{conversation}")
         research_template = """
         RESEARCH PROTOCOL:
 
         CONTEXT:
-        {conversation}
+        {conversation_text}
 
         REQUIRED STEPS:
         1. LITERATURE COLLECTION:
-        Use arxiv_research_tool with these parameters:
-        {
-            "title": "Relevant keywords from context",
-            "category": "cs.AI or cs.CV based on topic",
-            "max_results": 4,
-            "extract_text": true,
-            "sort_by": "relevance",
-            "sort_order": "descending"
-        }
-        
+        Use arxiv_research_tool
         Requirements:
         - Extract 4 papers per search (maximum allowed)
         - Perform multiple searches with different keywords to get minimum 5 papers
@@ -57,11 +48,8 @@ class Tasks:
         c) Empirical Evidence Review
 
         3. CONTENT EXTRACTION:
-        Use load_document for each paper's PDF URL:
-        {
-            "file_path_url": "PDF URL from arxiv results"
-        }
-
+        Use load_document for each paper's PDF URL
+        
         4. SYNTHESIS:
         Compile a structured report with:
         - Abstract
@@ -70,37 +58,14 @@ class Tasks:
         - Results Analysis
         - Conclusions
         - Full References
-
-        OUTPUT FORMAT:
-        {
-            "abstract": "Summary of findings",
-            "literature_review": {
-                "background": "Historical and current context",
-                "methodologies": "Analysis of approaches",
-                "trends": "Emerging directions"
-            },
-            "analysis": {
-                "methods_comparison": "Comparative analysis",
-                "empirical_results": "Key findings",
-                "limitations": "Current limitations"
-            },
-            "conclusions": "Synthesis and recommendations",
-            "references": [
-                {
-                    "title": "Paper title",
-                    "authors": ["Author names"],
-                    "url": "Paper URL",
-                    "key_findings": "Main contributions"
-                }
-            ]
-        }
         """
         
-        conversation = "\n".join([f"{k}: {v}" for k, v in conversation.items()])
+        # Convert conversation dictionary to text
+        conversation_text = "\n".join([f"{k}: {v}" for k, v in conversation.items()])
         
         return Task(
-            description=research_template.format(conversation=conversation),
-            expected_output="A structured research report following the specified output format",
+            description=research_template.format(conversation_text=conversation_text),
+            expected_output="structured dictionary with key: 'abstract','literature_review','analysis','conclusion','references'",
             agent=agent,
             async_execution=True
         )
