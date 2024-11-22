@@ -15,64 +15,94 @@ class Tasks:
             agent=agent,
             output_json=OutputModel
         )
-        
     
-    def task_research(self, agent, conversation_data: Dict[str,str]) -> Task:
-        
+    
+    
+    def task_research(self, agent, conversation: Dict[str, str]) -> Task:
         research_template = """
-        COMPREHENSIVE RESEARCH PROTOCOL:
+        RESEARCH PROTOCOL:
 
-        RESEARCH CONTEXT:
+        CONTEXT:
         {conversation}
 
-        DETAILED RESEARCH REQUIREMENTS:
-        1. Systematic Literature Review
-        - Minimum 10-15 peer-reviewed sources
-        - Cover publications from last 5 years
-        - Include seminal works in the field
-        - Use ArXiv and other academic databases
+        REQUIRED STEPS:
+        1. LITERATURE COLLECTION:
+        Use arxiv_research_tool with these parameters:
+        {
+            "title": "Relevant keywords from context",
+            "category": "cs.AI or cs.CV based on topic",
+            "max_results": 4,
+            "extract_text": true,
+            "sort_by": "relevance",
+            "sort_order": "descending"
+        }
+        
+        Requirements:
+        - Extract 4 papers per search (maximum allowed)
+        - Perform multiple searches with different keywords to get minimum 5 papers
+        - Focus on last 5 years
+        - Include seminal works
+        - Target renowned researchers
 
-        2. Research Analysis Framework:
+        2. RESEARCH ANALYSIS:
+        For each paper found:
+        - Extract and document key findings
+        - Analyze methodology
+        - Note empirical results
+        - Document implementation details
+        
+        Organize findings into:
         a) Background and Current State
-        - Historical context
-        - Evolution of research topic
-        - Current technological/scientific landscape
+        b) Methodology Analysis
+        c) Empirical Evidence Review
 
-        b) Methodology Deep Dive
-        - Comparative analysis of research approaches
-        - Strengths and limitations of existing methodologies
-        - Innovative techniques and emerging trends
+        3. CONTENT EXTRACTION:
+        Use load_document for each paper's PDF URL:
+        {
+            "file_path_url": "PDF URL from arxiv results"
+        }
 
-        c) Empirical Evidence
-        - Quantitative and qualitative data analysis
-        - Statistical significance
-        - Reproducibility of findings
+        4. SYNTHESIS:
+        Compile a structured report with:
+        - Abstract
+        - Literature Review
+        - Methodology Comparison
+        - Results Analysis
+        - Conclusions
+        - Full References
 
-        3. Critical Analysis
-        - Identify research gaps
-        - Propose potential future research directions
-        - Discuss potential real-world applications
-
-        4. Comprehensive Documentation
-        - Structured academic report
-        - Detailed references (APA/IEEE format)
-        - In-text citations
-        - Potential follow-up research questions
-
-        OUTPUT REQUIREMENTS:
-        - Structured academic report
-        - Include full bibliography
-        - Cite at least 15 sources
+        OUTPUT FORMAT:
+        {
+            "abstract": "Summary of findings",
+            "literature_review": {
+                "background": "Historical and current context",
+                "methodologies": "Analysis of approaches",
+                "trends": "Emerging directions"
+            },
+            "analysis": {
+                "methods_comparison": "Comparative analysis",
+                "empirical_results": "Key findings",
+                "limitations": "Current limitations"
+            },
+            "conclusions": "Synthesis and recommendations",
+            "references": [
+                {
+                    "title": "Paper title",
+                    "authors": ["Author names"],
+                    "url": "Paper URL",
+                    "key_findings": "Main contributions"
+                }
+            ]
+        }
         """
         
-        # Format conversation data into a string
-        conversation = "\n".join([f"{k}: {v}" for k, v in conversation_data.items()]) if conversation_data else "No conversation context provided."
+        conversation = "\n".join([f"{k}: {v}" for k, v in conversation.items()])
         
         return Task(
             description=research_template.format(conversation=conversation),
-            expected_output="A structured dictionary with comprehensive research report of abstract, literature review, methodology, results, conclusion, and full references",
+            expected_output="A structured research report following the specified output format",
             agent=agent,
-            async_execution=True,  # Allow parallel processing
+            async_execution=True
         )
             
     def format_research(self, agent, research_outcomes: Dict[str, Any]) -> Task:

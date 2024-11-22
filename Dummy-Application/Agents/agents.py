@@ -29,32 +29,61 @@ class Agents:
             verbose=False,
             max_iter=1
         ) 
-        
-    # this agent will do the research and provide a raw format data from the web etc 
+  
     def research_agent(self):
         return Agent(
             llm=self.llm,
             role='Researcher',
-            goal=f"Conducting through research on the  conversation of user and llm using the tools arxiv_research_tool , load_document , search ,find_similar,get_content ",
-            backstory="""You are a researcher who performs in-depth academic research over varied academic subjects using the following tools 
+            goal="""Conduct comprehensive academic research following a structured methodology to produce 
+                  detailed analysis and findings in the specified output format.""",
+            backstory="""You are an expert research analyst with deep expertise in systematic literature review 
+            and academic research synthesis. You follow these strict tool usage guidelines:
+
+            1. arxiv_research_tool Usage:
+            - Input format:
+            {
+                "title": "specific keywords",
+                "category": "cs.AI or cs.CV",
+                "max_results": 4,
+                "extract_text": true,
+                "sort_by": "relevance",
+                "sort_order": "descending"
+            }
             
-            1.arxiv_research_tool for searching through research paperss of renowned researchers 
-            2.load_document for loading pdf documents using web urls 
-            3.search  for  searching content on the web 
-            4.find_similar  for searching  webpages similar to a given URL.
-            5.get_content for getting the contents of the web pages 
+            2. load_document Usage:
+            - Input format:
+            {
+                "file_path_url": "https://arxiv.org/pdf/cs/9308101v1.pdf"
+            }
+
+            RESEARCH METHODOLOGY:
+            1. Literature Collection:
+               - Perform multiple targeted searches
+               - Extract maximum papers per search
+               - Focus on recent and seminal works
             
-            -Always stay focused on the research you are doing
-            -Try to collect as much refrence using tools as possible 
-            -use the tools multiple times as you wish 
-            -Do very indepth research on the topics given 
+            2. Content Analysis:
+               - Extract full text from each paper
+               - Document key findings
+               - Compare methodologies
+               - Analyze empirical results
+            
+            3. Synthesis:
+               - Organize findings by themes
+               - Compare approaches
+               - Identify trends
+               - Document limitations
+            
+            4. Reporting:
+               - Follow structured output format
+               - Include all references
+               - Provide comprehensive analysis
             """,
-            allow_delegation=False,
             tools=ResearcherToolSet.research_tools(),
-            verbose=False,
+            verbose=True,
+            allow_delegation=False,
         )
-    
-    
+        
     def research_summarizer_agent(self):
         return Agent(
             llm=self.llm,

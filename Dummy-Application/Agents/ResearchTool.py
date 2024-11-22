@@ -5,13 +5,108 @@ import requests
 import PyPDF2
 import io
 from crewai_tools import tool
+from typing import Optional,Dict
 class ResearchTool:
     def __init__(self):
         pass
     
+  
+        
     @staticmethod
-    @tool
-    def load_document(file_path_url):
+    @tool("load_document")
+    def load_document(file_path_url: str) -> str:
+        """Load and extract text from PDF documents."""
+        try:
+            response = requests.get(file_path_url)
+            response.raise_for_status()
+            
+            pdf_file_obj = io.BytesIO(response.content)
+            pdf_reader = PyPDF2.PdfReader(pdf_file_obj)
+            
+            text = ""
+            num_pages = min(4, len(pdf_reader.pages))
+            
+            for page_num in range(num_pages):
+                text += pdf_reader.pages[page_num].extract_text()
+
+            return text
+        except Exception as e:
+            return f"Error processing document: {str(e)}"
+    
+       
+    @staticmethod
+    @tool("arxiv_research")
+    def arxiv_research_tool(
+        author: Optional[str] = None,
+        title: Optional[str] = None,
+        category: Optional[str] = None,
+        max_results: int = 1,
+        sort_by: str = "relevance",
+        sort_order: str = "ascending",
+        extract_text: bool = True
+    ) -> Dict:
+        """Search and extract research papers from ArXiv."""
+        try:
+            # Input validation
+            if not any([author, title, category]):
+                category = "cs.AI"
+
+            # Prepare search query
+            search_parts = []
+            if author:
+                search_parts.append(f"au:{quote(author)}")
+            if title:
+                search_parts.append(f"ti:{quote(title)}")
+            if category:
+                search_parts.append(f"cat:{quote(category)}")
+
+            search_query = "+AND+".join(search_parts)
+
+            # Prepare API request
+            base_url = "http://export.arxiv.org/api/query"
+            params = {
+                "search_query": search_query,
+                "max_results": min(max(1, max_results), 4),
+                "sortBy": sort_by if sort_by in ["relevance", "lastUpdatedDate", "submittedDate"] else "relevance",
+                "sortOrder": sort_order.lower() if sort_order.lower() in ["ascending", "descending"] else "ascending",
+            }
+            
+            url = f"{base_url}?{'&'.join(f'{k}={v}' for k, v in params.items())}"
+
+            # Execute request
+            with libreq.urlopen(url, timeout=10) as response:
+                xml_data = response.read().decode("utf-8")
+
+            # Parse results
+            soup = BeautifulSoup(xml_data, "xml")
+            entries = soup.find_all("entry")
+
+            results = {
+                "papers": [],
+                "extracted_texts": []
+            }
+
+            for entry in entries:
+                paper_info = {
+                    "title": entry.find("title").text.strip() if entry.find("title") else "No Title",
+                    "authors": [a.text for a in entry.find_all("author")],
+                    "summary": entry.find("summary").text.strip() if entry.find("summary") else "No Summary",
+                    "pdf_link": entry.find("link", title="pdf")["href"] if entry.find("link", title="pdf") else None,
+                }
+                results["papers"].append(paper_info)
+
+                if extract_text and paper_info['pdf_link']:
+                    text = ResearchTool.extract_text(paper_info['pdf_link'])
+                    results["extracted_texts"].append(text)
+
+            return results
+
+        except Exception as e:
+            return {"error": str(e), "papers": [], "extracted_texts": []}
+
+    
+    @staticmethod
+    def extract_text(file_path_url):
         """This tool helps in loading documents and extracting text from them for research purpose 
         
         Args:
@@ -42,118 +137,3 @@ class ResearchTool:
         except Exception as e:
             print(f"Error occured in processing of pdf:{e}")
             return None 
-
-        
-       
-    @staticmethod
-    @tool
-    def arxiv_research_tool(author=None,title=None,category=None, sortBy="relevance", maxResults=1, sortOrder="ascending",extract_text=True, ) -> dict:
-        """
-        Advanced tool for searching and extracting research papers from ArXiv.
-
-        Comprehensive search and extraction capabilities for academic research papers:
-        - Flexible search across multiple parameters
-        - Configurable search and extraction options
-
-        Args:
-            author (str, optional): Author name to search for. 
-                Example: "Geoffrey Hinton"
-            title (str, optional): Paper title or keywords. 
-                Example: "Attention Is All You Need"
-            category (str, optional): ArXiv research category. 
-                Examples: "cs.AI", "math.ST", "physics.comp-ph"
-            sortBy (str, optional): Sorting method for search results. 
-                Choices: 
-                - "relevance" (default)
-                - "lastUpdatedDate"
-                - "submittedDate"
-            maxResults (int, optional): Maximum number of papers to retrieve. 
-                Range: 1-4, Default: 1
-            sortOrder (str, optional): Order of sorting. 
-                Choices: 
-                - "ascending" (default)
-                - "descending"
-            extract_text (bool, optional): Whether to extract full text from PDF. 
-                Default: True
-
-        Returns:
-            dict: A dictionary containing:
-            - 'papers': List of paper details
-            - 'extracted_texts': List of extracted paper texts (if extract_text is True)
-
-        Example:
-            >>> result = ArxivResearchTool.arxiv_research_tool(
-            ...     author="Yann LeCun", 
-            ...     category="cs.AI", 
-            ...     maxResults=2
-            ... )
-        """
-        # Input validation
-        if not any([author, title, category]):
-            print(f"No parameter specfied defaulting to cs.AI")
-            category="cs.AI"
-
-        # Validate and prepare search parameters
-        search_parts = []
-        if author:
-            search_parts.append(f"au:{quote(author)}")
-        if title:
-            search_parts.append(f"ti:{quote(title)}")
-        if category:
-            search_parts.append(f"cat:{quote(category)}")
-
-        search_query = "+AND+".join(search_parts)
-
-        # Sanitize and validate inputs
-        maxResults = min(max(1, maxResults), 4)
-        sortOrder = sortOrder.lower() if sortOrder.lower() in ["ascending", "descending"] else "ascending"
-        sortBy = sortBy if sortBy in ["relevance", "lastUpdatedDate", "submittedDate"] else "relevance"
-
-        # Prepare result dictionary
-        result = {
-            "papers": [],
-            "extracted_texts": []
-        }
-
-        try:
-            # Construct ArXiv API URL
-            base_url = "http://export.arxiv.org/api/query"
-            params = {
-                "search_query": search_query,
-                "max_results": maxResults,
-                "sortBy": sortBy,
-                "sortOrder": sortOrder,
-            }
-            url = f"{base_url}?{'&'.join(f'{k}={v}' for k, v in params.items())}"
-
-            # Fetch XML data
-            with libreq.urlopen(url, timeout=10) as response:
-                xml_data = response.read().decode("utf-8")
-
-            # Parse XML
-            soup = BeautifulSoup(xml_data, "xml")
-            entries = soup.find_all("entry")
-
-            for entry in entries:
-                paper_info = {
-                    "title": entry.find("title").text.strip() if entry.find("title") else "No Title",
-                    "authors": [a.text for a in entry.find_all("author")],
-                    "summary": entry.find("summary").text.strip() if entry.find("summary") else "No Summary",
-                    "pdf_link": entry.find("link", title="pdf")["href"] if entry.find("link", title="pdf") else None,
-                }
-                result["papers"].append(paper_info)
-
-                # Text extraction if enabled
-                if extract_text and paper_info['pdf_link']:
-                    try:
-                        text = ResearchTool.load_document(paper_info['pdf_link'])
-                        result["extracted_texts"].append(text)
-                    except Exception as extract_error:
-                        print(f"Text extraction error for {paper_info['title']}: {str(extract_error)}")
-
-        except Exception as e:
-            print(f"Search Error :{e}")
-
-        return result
-    
-    
