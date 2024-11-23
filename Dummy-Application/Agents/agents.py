@@ -10,7 +10,6 @@ class Agents:
         # Initialize the LLM with model and API key from environment variables
         """ self.llm = LLM(
             model="huggingface/Qwen/Qwen2.5-Coder-3B-Instruct",  # You can change the model
-            api_key="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",
             api_base="https://api-inference.huggingface.co/models/Qwen/Qwen2.5-Coder-3B-Instruct",
         )
         """
