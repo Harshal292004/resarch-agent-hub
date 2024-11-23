@@ -36,63 +36,37 @@ class Agents:
   
     def research_agent(self):
         return Agent(
-            llm=self.llm,
             role='Researcher',
-            goal="""Conduct comprehensive academic research following a structured methodology to produce 
-                  detailed analysis and findings in the specified output format.""",
+            goal="Conduct comprehensive academic research following a structured methodology",
             backstory="""You are an expert research analyst with deep expertise in systematic literature review 
             and academic research synthesis.
-            RESEARCH METHODOLOGY:
-            1. Literature Collection:
-               - Perform multiple targeted searches
-               - Extract maximum papers per search
-               - Focus on recent and seminal works
             
-            2. Content Analysis:
-               - Extract full text from each paper
-               - Document key findings
-               - Compare methodologies
-               - Analyze empirical results
+            VERY IMPORTANT - When using tools, you MUST use this exact format:
             
-            3. Synthesis:
-               - Organize findings by themes
-               - Compare approaches
-               - Identify trends
-               - Document limitations
+            Thought: [your reasoning]
+            Action: arxiv_research_tool
+            Action Input: {"author": "string", "title": "string", "category": "cs.AI", "max_results": 4, "sort_by": "lastUpdatedDate", "sort_order": "descending", "extract_text": true}
             
-            4. Reporting:
-               - Follow structured output format
-               - Include all references
-               - Provide comprehensive analysis
-               
-               
-                IMPORTANT: When using arxiv_research_tool, you must format the input as a STRING containing a JSON object. For example:
-
-                Action: arxiv_research_tool
-                Action Input: '{"author":"Geoffrey Hinton","title":"Neural Networks","category":"cs.AI","max_results":4,"sort_by":"relevance","sort_order":"descending","extract_text":"True"}'
-
-                For load_document, simply provide the URL:
-
-                Action: load_document
-                Action Input: "https://example.com/paper.pdf"
-
-                REMEMBER: 
-                - The arxiv_research_tool input must be a STRING containing valid JSON
-                - All JSON keys must be included: author, title, category, max_results, sort_by, sort_order, extract_text
-                - Never use Thought: as it's not a valid action
-
-                Final Answer: {
-                    "abstract": "[summary of findings]",
-                    "literature_review": "[detailed literature review]",
-                    "analysis": "[methodology comparison and analysis]",
-                    "conclusion": "[key takeaways and recommendations]",
-                    "references": ["[list of paper references]"]
-                }
-
-            """,
+            After getting the Observation, you can either:
+            1. Use another tool with the same format
+            2. Provide your Final Answer
+            
+            Remember:
+            - Always include "Thought:", "Action:", and "Action Input:" prefixes
+            - The Action Input must be a valid JSON object without escaped quotes
+            - Only use one tool at a time
+            - Wait for each tool's response before using another tool
+            - Don't mix tool usage with final answers
+            
+            Available tools:
+            - arxiv_research_tool: Search academic papers
+            - load_document: Extract text from PDFs
+            - search: Web search
+            - find_similar: Find similar web pages
+            - get_contents: Get webpage contents""",
             tools=ResearcherToolSet.research_tools(),
             verbose=True,
-            allow_delegation=False,
+            allow_delegation=False
         )
         
     def research_summarizer_agent(self):

@@ -28,9 +28,9 @@ from ResearchTool import ResearchTool
 from ExaSearchToolset import ExaSearchToolset
 
 from typing import Type
-from crewai.tools import BaseTool
+from crewai_tools import BaseTool
 from pydantic import BaseModel, Field
-
+from ResearchTool import ArxivResearchTool
 load_dotenv()
 
 
@@ -170,7 +170,7 @@ class ResearcherToolSet:
     def research_tools():
         web_search_tools = ExaSearchToolset.tools()
         return [
-            ResearchTool.arxiv_research_tool,
+            ArxivResearchTool(),
             ResearchTool.load_document,
             *web_search_tools  # Spread the tools from web_search_tools into the list
         ]
