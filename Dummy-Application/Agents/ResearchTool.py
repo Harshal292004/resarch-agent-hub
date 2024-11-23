@@ -5,12 +5,69 @@ import requests
 import PyPDF2
 import io
 from crewai_tools import tool
+import json
 from typing import Optional,Dict
+from pydantic import BaseModel,ValidationError, Field
+from typing import Type
+from crewai.tools import BaseTool
+
+""" 
+class ArxivResearchInput(BaseModel):
+    author: Optional[str] = ""
+    title: Optional[str] = ""
+    category: Optional[str] = "cs.AI"
+    max_results: int = 4
+    sort_by: str = "date"
+    sort_order: str = "descending"
+    extract_text: bool = False
+"""
+class ArxivResearchInput(BaseModel):
+    """Input schema for arxiv tool
+
+    Args:
+        BaseModel (_type_): _description_
+    """
+    argument:str =Field(
+        default="{\"author\": \"Renowned researchers in AGI and mathematics\", \"title\": \"P versus NP\", \"category\": \"cs.AI\", \"max_results\": 4, \"sort_by\": \"relevance\", \"sort_order\": \"descending\", \"extract_text\": true}",
+        description='Description of the argument.'
+    )
+    
+    
+
+class MyCustomTool(BaseTool):
+name: str ='arxiv_research_tool'
+description: str = """"Useful to search the arxiv academic data base  and return relevant research papaers 
+:param payload: str, a string representation of dictionary containing the following keys:
+
+author: str,the author to search for ,
+title: str,the title of the research paper ,
+category: str,the category of the subject of research,
+max_results: int ,number of papers ,
+sort_by: str, select from "relevance", "lastUpdatedDate", "submittedDate",
+sort_order: str, "ascending" or "descending",
+extract_text: bool,  "True"
+
+example payload:
+{
+    "author" : "Geoffry Hinton",
+    "title": "Attention is all you need",
+    "category":"cs.AI",
+    "max_results":  1,
+    "sort_by":"relevance",
+    "sort_order":"ascending",
+    "extract_text":"True"
+}
+"""
+"""Search and extract research papers from ArXiv."""
+args_schema: Type[BaseModel] = ArxivResearchInput
+
+def _run(self, argument: str) -> str:
+    ResearchTool.arxiv_research_tool(argument)
+            
 class ResearchTool:
     def __init__(self):
         pass
     
-  
         
     @staticmethod
     @tool("load_document")
@@ -33,25 +90,58 @@ class ResearchTool:
         except Exception as e:
             return f"Error processing document: {str(e)}"
     
-       
-    @staticmethod
-    @tool("arxiv_research")
+    """  @tool
     def arxiv_research_tool(
-        author: Optional[str] = None,
-        title: Optional[str] = None,
-        category: Optional[str] = None,
-        max_results: int = 1,
-        sort_by: str = "relevance",
-        sort_order: str = "ascending",
-        extract_text: bool = True
+        input_data:dict 
+    ):
+        Search and extract research papers from ArXiv.
+        try:
+            
+            print(f"Oyee andar agye oyee pen choo !!!!! hurarara {validated_data.dict()}")
+            validated_data= ArxivResearchInput(**input_data)
+            return ResearchTool.arxiv_research(**validated_data.dict())
+        except ValidationError as e:
+            return {"error": e.errors()}
+    """ 
+    @staticmethod
+    @tool('arxiv_research_tool')
+    def arxiv_research_tool(
+        payload
     ) -> Dict:
+        """Useful to search the arxiv academic data base  and return relevant research papaers 
+        :param payload: str, a string representation of dictionary containing the following keys:
+
+        author: str,the author to search for ,
+        title: str,the title of the research paper ,
+        category: str,the category of the subject of research,
+        max_results: int ,number of papers ,
+        sort_by: str, select from "relevance", "lastUpdatedDate", "submittedDate",
+        sort_order: str, "ascending" or "descending",
+        extract_text: bool,  "True"
+        
+        example payload:
+        {
+            "author" : "Geoffry Hinton",
+            "title": "Attention is all you need",
+            "category":"cs.AI",
+            "max_results":  1,
+            "sort_by":"relevance",
+            "sort_order":"ascending",
+            "extract_text":"True"
+        }
+        """
         """Search and extract research papers from ArXiv."""
         try:
+            author = json.loads(payload)['author']
+            title = json.loads(payload)['title']
+            category=json.loads(payload)['category']
+            max_results=json.loads(payload)['max_results']
+            sort_by=json.loads(payload)['sort_by']
+            sort_order=json.loads(payload)['sort_order']
+            extract_text=json.loads(payload)['extract_text']
             # Input validation
-            if not any([author, title, category]):
-                category = "cs.AI"
-
-            # Prepare search query
+            if not author and not title and not category:
+                 category = "cs.AI"
             search_parts = []
             if author:
                 search_parts.append(f"au:{quote(author)}")

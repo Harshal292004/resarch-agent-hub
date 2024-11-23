@@ -26,10 +26,15 @@ from QuestioningTool import QuestioningTool
 from tasks import OutputModel
 from ResearchTool import ResearchTool
 from ExaSearchToolset import ExaSearchToolset
+
+from typing import Type
+from crewai.tools import BaseTool
+from pydantic import BaseModel, Field
+
 load_dotenv()
 
+
 class ResearcherToolSet:
-        
     
     @tool
     def process_interaction():

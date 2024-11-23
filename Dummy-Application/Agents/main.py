@@ -47,23 +47,26 @@ def main():
         tasks=[task2],
         verbose=True
     )     
+   
     research_outcomes= crew2.kickoff()
     print(f"Research outcomes type: {type(research_outcomes)}")
     print(f"Research outcomes:{research_outcomes}") 
+    print(f"Research dict type:{type(research_outcomes.to_dict())}")
     
-
-    
-    """ 
-    task3=tasks_manager.format_research(research_summarizer_agent)
+    research_outcomes_dict=research_outcomes.to_dict()
+    task3=tasks_manager.format_research(research_summarizer_agent,research_outcomes=research_outcomes_dict)
     crew3= Crew(
         agents=[research_summarizer_agent],
         tasks=[task3],
         verbose=True
     ) 
     
-    research_outcomes=crew3.kickoff()
-    print(f"Summarized outcome types:{type(research_outcomes)}")
-    print(f"Summarizer outcomes:{research_outcomes}")
+    formated_research_outcomes=crew3.kickoff()
+    print(f"Summarized outcome types:{type(formated_research_outcomes)}")
+    print(f"Summarizer outcomes:{formated_research_outcomes}")
+    print(f"Summarizer dict:{formated_research_outcomes.to_dict()}")
+   
+    """
     
     task4=tasks_manager.task_convert_latex(latex_converter_agent)
     crew4=Crew(
