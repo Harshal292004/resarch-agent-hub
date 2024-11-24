@@ -7,7 +7,7 @@ load_dotenv()
 
 class Agents:
     def __init__(self):
-        self.llm=LLM(
+        self.llm = LLM(
             model="groq/llama3-8b-8192",
             api_key=os.getenv("GROQ_API_KEY")    
         )
@@ -73,12 +73,13 @@ class Agents:
             """,
             allow_delegation=False,
             tools=[ArxivResearchTool()],
-            verbose=True,  # Enable for debugging, set to False in production
-            max_iter=3,  # Limit maximum iterations to prevent infinite loops
+            verbose=True,
+            max_iter=3
         )
         
     def research_agent(self):
         return Agent(
+            llm=self.llm,  # Add llm parameter
             role='Researcher',
             goal="Conduct comprehensive academic research following a structured methodology",
             backstory="""You are an expert research analyst with deep expertise in systematic literature review 
@@ -118,7 +119,7 @@ class Agents:
     def latex_converter_agent(self):
         return Agent(
             llm=self.llm,
-            role='LaTeX Code  Specialist',
+            role='LaTeX Code Specialist',
             goal="""
             Transform formatted research into professional LaTeX code by:
             1. Converting structured content into proper LaTeX syntax
@@ -126,9 +127,9 @@ class Agents:
             3. Ensuring correct handling of mathematical notations
             4. Managing citations and references appropriately
             
-            And the save it to a tex file using the `latex_saver_tool`
+            And save it to a tex file using the `latex_saver_tool`
             """,
-            backstory="""You are an expert LaTeX Code Specialist with extensive experience in academic Code writing .
+            backstory="""You are an expert LaTeX Code Specialist with extensive experience in academic Code writing.
 
             Key Responsibilities:
             - Convert structured research into LaTeX format
@@ -136,6 +137,7 @@ class Agents:
             - Handle complex mathematical notations
             - Manage citations and references
             - Generate clean, error-free LaTeX code
+            - Also name the research paper yourself 
             
             Document Structure Protocol:
             1. Analyze input format
@@ -152,15 +154,13 @@ class Agents:
             
             Quality Checks:
             - Verify syntax correctness
-            - Confirm citation format
             - Check mathematical notation
             - Ensure proper section hierarchy
-            
             """,
-            allow_delegation=False,  # Changed to False for consistency
+            allow_delegation=False,
             tools=ResearcherToolSet.latex_saver_tools(),
-            verbose=True,  # Enable for debugging
-            max_iter=2  # Limit iterations for PDF generation
+            verbose=True,
+            max_iter=2
         )
     
     def latex_to_pdf_agent(self):
@@ -171,53 +171,17 @@ class Agents:
             Transform LaTeX (.tex) files into professional PDF documents by:
             1. Executing proper LaTeX compilation process using the `compile_latex_to_pdf` tool
             2. Ensuring high-quality PDF output generation
-            
             """,
             backstory="""You are an expert LaTeX PDF Generation Specialist with extensive experience in document compilation.
 
             Key Responsibilities:
-            - Locate and verify LaTeX source files
-            - Execute appropriate compilation commands
-            - Handle package dependencies
-            - Manage compilation errors
-            - Generate publication-ready PDFs
-            
-            Conversion Protocol:
-            1. Validate source LaTeX file
-            2. Check for required packages
-            3. Execute compilation process
-            4. Handle intermediate files
-            5. Verify PDF output quality
-            
-            Processing Guidelines:
-            - Verify file permissions
-            - Check for missing dependencies
-            - Handle compilation errors gracefully
-            - Ensure proper file encoding
-            - Validate output quality
-            
-            Quality Checks:
-            - Confirm successful compilation
-            - Verify PDF generation
-            - Check for missing references
-            - Validate image inclusion
-            - Ensure proper rendering
+            Use the `compile_latex_to_pdf` 
             
             Tool Usage Requirements:
-            - Use provided latex_conver_tools
-            - Follow proper file handling procedures
-            - Maintain error logging
-            - Implement retry logic if needed
+            - Use provided `compile_latex_to_pdf` with a file_path of the .tex file to be compiled 
             """,
             allow_delegation=False,
             tools=ResearcherToolSet.latex_conver_tools(),
             verbose=True,
             max_iter=3
         )
-       
-    
-
-    
-    # todo: add a agent that can store the final pdf docs to a faiss data base for a particular user so that we can add memeory to general caht bot 
-    
-    
