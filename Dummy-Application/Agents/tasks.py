@@ -1,140 +1,127 @@
-from crewai import  Task
-from typing import Dict, Any,List
-from pydantic import BaseModel
-from typing import Dict, Any
-    
-class OutputModel(BaseModel):
-    conversation:Dict[str,str]
-class ResearchOutcomeModel(BaseModel):
-    abstract:str
-    literature_review:str
-    analysis:str
-    conclusion:str
-    references:List[str]
-class ResearchFormatModel(BaseModel):
-    title:str
-    abstract:str
-    introduction:str
-    literature_review:str 
-    methodology:str
-    results:str
-    discussion:str 
-    future_work:str 
-    conclusion:str 
-    references:List[str] 
+from crewai import Task
+from typing import Dict, Any, List
+from PydanticBaseModels import (
+    ConversationOutPutModel,
+    ResearchPaperModel,
+    ResearchOutComeModel,
+    ResearchFormatModel,
+    LatexCodeModel,
+    LatexCompiledPathModel
+)
+
 class Tasks:
-        
-    def task_question(self, agent):
+    def format_input_dict(self, input_dict: Dict[str, str]) -> str:
+        return "\n".join([f"{k}: {v}" for k, v in input_dict.items()])
+
+    def task_question(self, agent) -> Task:
         return Task(
-            description="Use process_interaction tool to gather initial research information",
-            expected_output="A structured dictionary with key: 'conversation'",
+            description=(
+                "Use process_interaction tool to gather initial research information"
+            ),
+            expected_output=(
+                "A structured dictionary with key: 'conversation'"
+            ),
             agent=agent,
-            output_json=OutputModel
+            output_json=ConversationOutPutModel
         )
     
-    def task_extract_paper(self, agent, conversation:Dict[str,str])->Task:
-        extraction_template="""
-        Extraction Protocol:
+    def task_extract_paper(self, agent, conversation: Dict[str, str]) -> Task:
+        extraction_template = """
+        EXTRACTION PROTOCOL:
         
         CONTEXT:
         {conversation_text}
         
-        Use arxiv_research_tool to gather relelvant text of renowned authors and seminal work in that field 
-        
+        INSTRUCTIONS:
+        1. Use arxiv_research_tool to gather relevant papers
+        2. Focus on renowned authors and seminal work
+        3. Store extracted content under 'PAPER' key
         """
         
-        conversation_text= "\n".join([f"{k}:{v}" for k,v in conversation.items()])
-        
         return Task(
-            description= extraction_template.format(conversation_text=conversation_text),
-            expected_output="A structured dictionary with key: 'PAPER' ",
-            agent= agent 
+            description=extraction_template.format(
+                conversation_text=self.format_input_dict(conversation)
+            ),
+            expected_output="A structured dictionary with key: 'PAPER'",
+            agent=agent,
+            output_json=ResearchPaperModel
         )
     
     def task_research(self, agent, conversation: Dict[str, str]) -> Task:
         research_template = """
-            RESEARCH PROTOCOL:
-            
-            CONTEXT:
-            {conversation_text}
+        RESEARCH PROTOCOL:
+        
+        CONTEXT:
+        {conversation_text}
 
-
-            REQUIRED STEPS:
-            
-
-            1. RESEARCH ANALYSIS:
-            For each paper found:
-            - Extract and document key findings
-            - Analyze methodology
-            - Note empirical results
-            - Document implementation details
-            
-            Organize findings into:
-            a) Background and Current State
-            b) Methodology Analysis
-            c) Empirical Evidence Review
-
-            2. CONTENT EXTRACTION:
-            Use load_document for each paper's PDF URL
-            
-            3. SYNTHESIS:
-            Compile a structured report with:
-            - Abstract
-            - Literature Review
-            - Methodology Comparison
-            - Results Analysis
-            - Conclusions
-            - Full References
+        REQUIRED STEPS:
+        1. Research Analysis:
+           - Extract key findings
+           - Document methodology
+           - Record empirical results
+           - Note implementation details
+        
+        2. Content Organization:
+           - Background/Current State
+           - Methodology Analysis
+           - Empirical Evidence
+        
+        3. Content Extraction:
+           - Use load_document for PDFs
+        
+        4. Final Synthesis:
+           - Abstract
+           - Literature Review
+           - Methodology Comparison
+           - Results Analysis
+           - Conclusions
+           - References
         """
         
-        # Convert conversation dictionary to text
-        conversation_text = "\n".join([f"{k}: {v}" for k, v in conversation.items()])
-        
         return Task(
-            description=research_template.format(conversation_text=conversation_text),
-            expected_output="structured dictionary with key: 'abstract','literature_review','analysis','conclusion','references'",
+            description=research_template.format(
+                conversation_text=self.format_input_dict(conversation)
+            ),
+            expected_output="A structured dictionary with keys: 'abstract', 'literature_review', 'analysis', 'conclusion', 'references'",
             agent=agent,
             async_execution=True,
-            output_json=ResearchOutcomeModel
+            output_json=ResearchOutComeModel
         )
             
-    def format_research(self, agent, research_outcomes: Dict[str, Any]) -> Task:
-        research_format_template="""
-            TASK: Organize the research findings into a clean, structured format that can be easily converted to LaTeX.
+    def format_research(self, agent, research_outcomes: Dict[str, str]) -> Task:
+        research_format_template = """
+        FORMAT RESEARCH TASK:
+        
+        INPUT RESEARCH:
+        {research_text}
 
-            INPUT RESEARCH:
-            {research_text}
-
-            REQUIREMENTS:
-            1. Content should be clean and well-organized
-            2. Each section should be complete and self-contained
-            3. Use proper paragraph breaks
-            4. Include in-text citations (Author, Year)
-            5. Keep formatting minimal - no special characters or markup
-            6. Maintain consistent citation format throughout
-            """
-        research_text= "\n".join([f"{k}:{v}" for k,v in research_outcomes.items()])
+        REQUIREMENTS:
+        1. Clean, organized content structure
+        2. Complete, self-contained sections
+        3. Proper paragraph breaks
+        4. Standardized citations (Author, Year)
+        5. Minimal formatting
+        6. Consistent citation style
+        """
         
         return Task(
-            description=research_format_template.format(research_text=research_text),
-            expected_output="""Clean, structured dictionary with all required sections ready for LaTeX conversion
-            Return a dictionary with these exact keys, where each value contains properly formatted text content:
+            description=research_format_template.format(
+                research_text=self.format_input_dict(research_outcomes)
+            ),
+            expected_output="""
+            Return dictionary with following structure:
             {
-                "title": "Clear, descriptive title of the paper",
-                "abstract": "Concise summary of the research",
-                "introduction": "Background and context of the research",
-                "literature_review": "Organized review of relevant literature",
-                "methodology": "Research approach and methods used",
-                "results": "Key findings and outcomes",
-                "discussion": "Analysis and interpretation of results",
-                "future_work": "Potential future research directions",
-                "conclusion": "Summary of key findings and implications",
-                "references": [
-                    "Author1, Title1, Year1",
-                    "Author2, Title2, Year2"
-                ]
+                "title": str,
+                "abstract": str,
+                "introduction": str,
+                "literature_review": str,
+                "methodology": str,
+                "results": str,
+                "discussion": str,
+                "future_work": str,
+                "conclusion": str,
+                "references": List[str]
             }
-
             """,
             agent=agent,
             async_execution=True,
@@ -142,36 +129,51 @@ class Tasks:
         )
         
     def task_convert_latex(self, agent, formatted_research: Dict[str, Any], research_name: str) -> Task:
+        formatted_content = '\n'.join(
+            f"{k}: {v}" if k != 'references' else 
+            f"references: {' '.join(ref for ref in v)}" 
+            for k, v in formatted_research.items()
+        )
+        
+        conversion_template = """
+        LATEX CONVERSION TASK:
+        
+        CONTENT:
+        {formatted_content}
+        
+        REQUIREMENTS:
+        1. Use appropriate document class
+        2. Implement proper sectioning
+        3. Follow academic formatting
+        
+        OUTPUT FILE: {research_name}.tex
+        """
+        
         return Task(
-            description=f"""Generate complete LaTeX code for the research paper:
-            CONTENT:
-            {formatted_research}
-            
-            REQUIREMENTS:
-            1. Use appropriate document class (e.g., 'article', 'paper')
-            2. Implement proper sectioning
-            3. Follow academic paper formatting guidelines
-            
-            Save as: {research_name}.tex""",
-            expected_output="LaTeX file path containing the formatted research paper",              
+            description=conversion_template.format(
+                formatted_content=formatted_content,
+                research_name=research_name
+            ),
+            expected_output="Dictionary with keys: 'tex_file_path', 'research_name'",
             output_file=f"output/{research_name}.tex",
             agent=agent,
-            async_execution=True
+            async_execution=True,
+            output_json=LatexCodeModel
         )
     
     def task_convert_latex_to_pdf(self, agent, latex_file_path: str) -> Task:
         return Task(
-            description=f"""Compile LaTeX file to PDF:
+            description=f"""
+            PDF COMPILATION TASK:
             
-            FILE: {latex_file_path}
+            INPUT FILE: {latex_file_path}
             
             REQUIREMENTS:
             1. Verify LaTeX syntax
-            2. Generate PDF with proper formatting
+            2. Generate formatted PDF
             """,
-            expected_output="PDF file path",
+            expected_output="Dictionary with key: 'pdf_file_path'",
             output_file=f"{latex_file_path}.pdf",
-            agent=agent
+            agent=agent,
+            output_json=LatexCompiledPathModel
         )
-        
-    # todo : add task to store papers in faiss

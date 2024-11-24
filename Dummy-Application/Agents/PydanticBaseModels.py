@@ -8,7 +8,7 @@ class ConversationOutPutModel(BaseModel):
     
     
 class ResearchPaperModel(BaseModel):
-    papers:Dict[str,Any]
+    PAPER:Dict[str,Any]
     
     
     
@@ -35,7 +35,7 @@ class ResearchFormatModel(BaseModel):
 
 class LatexCodeModel(BaseModel):
     tex_file_path:str 
+    research_name:str 
     
-    
-class LatexComoiledPathModel(BaseModel):
+class LatexCompiledPathModel(BaseModel):
     pdf_file_path:str 
