@@ -2,22 +2,16 @@ import os
 from crewai import Agent, LLM
 from dotenv import load_dotenv
 from tools import ResearcherToolSet
-from langchain_openai import ChatOpenAI
+from ResearchTool import ArxivResearchTool
 load_dotenv()
 
 class Agents:
     def __init__(self):
-        # Initialize the LLM with model and API key from environment variables
-        """ self.llm = LLM(
-            model="huggingface/Qwen/Qwen2.5-Coder-3B-Instruct",  # You can change the model
-            api_base="https://api-inference.huggingface.co/models/Qwen/Qwen2.5-Coder-3B-Instruct",
-        )
-        """
         self.llm=LLM(
             model="groq/llama3-8b-8192",
             api_key=os.getenv("GROQ_API_KEY")    
         )
-    # this agent will question  the user and take his her queries 
+        
     def questioning_agent(self):
         return Agent(
             llm=self.llm,
@@ -28,38 +22,73 @@ class Agents:
             - Ensure consistent output structure
             - Preserve exact conversation flow
             - Do not deviate from the original interaction""",
-            allow_delegation=False,  # Prevent deviation
+            allow_delegation=False,  
             tools=ResearcherToolSet.questioning_tools(),
             verbose=False,
             max_iter=1
         ) 
-  
+        
+    def research_paper_agent(self):
+        return Agent(
+            llm=self.llm,
+            role='Academic Research Explorer',
+            goal="""
+            Identify and analyze relevant research papers by:
+            1. Understanding the core research requirements
+            2. Finding papers that closely match the research criteria
+            3. Ensuring comprehensive coverage of the topic
+            4. Maintaining academic rigor in paper selection
+            """,
+            backstory="""You are an expert Academic Research Explorer specialized in discovering relevant scholarly work.
+
+            Key Responsibilities:
+            - Systematically search academic papers using arXiv
+            - Evaluate paper relevance and impact
+            - Maintain consistent research methodology
+            - Follow exact research parameters
+            
+            Tool Usage Protocol:
+            1. Analyze the research requirement
+            2. Formulate precise search criteria
+            3. Execute search using exact tool format below
+            
+            Required Tool Format:
+            Thought: [Explain your search strategy]
+            Action: arxiv_research_tool
+            Action Input: {
+                "author": "string",
+                "title": "string",
+                "category": "cs.AI",
+                "max_results": 4,
+                "sort_by": "lastUpdatedDate",
+                "sort_order": "descending",
+                "extract_text": true
+            }
+            
+            Search Guidelines:
+            - Always use arxiv_research_tool
+            - Maintain consistent input structure
+            - Follow the research scope strictly
+            - Document search reasoning clearly
+            """,
+            allow_delegation=False,
+            tools=[ArxivResearchTool()],
+            verbose=True,  # Enable for debugging, set to False in production
+            max_iter=3,  # Limit maximum iterations to prevent infinite loops
+        )
+        
     def research_agent(self):
         return Agent(
             role='Researcher',
             goal="Conduct comprehensive academic research following a structured methodology",
             backstory="""You are an expert research analyst with deep expertise in systematic literature review 
             and academic research synthesis.
-            
-            VERY IMPORTANT - When using tools, you MUST use this exact format:
-            
-            Thought: [your reasoning]
-            Action: arxiv_research_tool
-            Action Input: {"author": "string", "title": "string", "category": "cs.AI", "max_results": 4, "sort_by": "lastUpdatedDate", "sort_order": "descending", "extract_text": true}
-            
-            After getting the Observation, you can either:
-            1. Use another tool with the same format
-            2. Provide your Final Answer
-            
+          
             Remember:
-            - Always include "Thought:", "Action:", and "Action Input:" prefixes
-            - The Action Input must be a valid JSON object without escaped quotes
-            - Only use one tool at a time
             - Wait for each tool's response before using another tool
             - Don't mix tool usage with final answers
             
             Available tools:
-            - arxiv_research_tool: Search academic papers
             - load_document: Extract text from PDFs
             - search: Web search
             - find_similar: Find similar web pages
@@ -82,31 +111,109 @@ class Agents:
             
             Your job is to take research findings and organize them into a clean format 
             that another agent can easily convert to LaTeX.""",
-            allow_delegation=True,
+            allow_delegation=False,
             verbose=False
         )
-    # this agent will  convert the unstructured research of the research agent to a latex format and convert to pdf 
+        
     def latex_converter_agent(self):
         return Agent(
             llm=self.llm,
-            role='LaTeX Converter ',
-            goal="Convert the given formated research to latex code and then save it to latex file",
-            backstory="You are an expert in converting format research  into LaTeX code for research papers.",
-            allow_delegation=True,
-            verbose=False,
-            tools=ResearcherToolSet.latex_conver_tools()
+            role='LaTeX Code  Specialist',
+            goal="""
+            Transform formatted research into professional LaTeX code by:
+            1. Converting structured content into proper LaTeX syntax
+            2. Implementing academic paper formatting standards
+            3. Ensuring correct handling of mathematical notations
+            4. Managing citations and references appropriately
+            
+            And the save it to a tex file using the `latex_saver_tool`
+            """,
+            backstory="""You are an expert LaTeX Code Specialist with extensive experience in academic Code writing .
+
+            Key Responsibilities:
+            - Convert structured research into LaTeX format
+            - Apply academic paper templates and styles
+            - Handle complex mathematical notations
+            - Manage citations and references
+            - Generate clean, error-free LaTeX code
+            
+            Document Structure Protocol:
+            1. Analyze input format
+            2. Apply appropriate LaTeX template
+            3. Convert content sections systematically
+            4. Implement proper citations
+            
+            Formatting Guidelines:
+            - Use appropriate document class
+            - Maintain consistent styling
+            - Follow academic formatting standards
+            - Ensure proper package inclusion
+            - Validate mathematical expressions
+            
+            Quality Checks:
+            - Verify syntax correctness
+            - Confirm citation format
+            - Check mathematical notation
+            - Ensure proper section hierarchy
+            
+            """,
+            allow_delegation=False,  # Changed to False for consistency
+            tools=ResearcherToolSet.latex_saver_tools(),
+            verbose=True,  # Enable for debugging
+            max_iter=2  # Limit iterations for PDF generation
         )
     
     def latex_to_pdf_agent(self):
         return Agent(
             llm=self.llm,
-            role="Latex to Pdf saver",
-            goal='Given a latex file find it and convert it to a pdf using the tools provided',
-            backstory='You are skilled in conveerting given latex file to a pdf file',
-            allow_delegation=True,
-            tools=ResearcherToolSet.latex_conver_tools()
+            role='LaTeX PDF Compiler Specialist',
+            goal="""
+            Transform LaTeX (.tex) files into professional PDF documents by:
+            1. Executing proper LaTeX compilation process using the `compile_latex_to_pdf` tool
+            2. Ensuring high-quality PDF output generation
+            
+            """,
+            backstory="""You are an expert LaTeX PDF Generation Specialist with extensive experience in document compilation.
+
+            Key Responsibilities:
+            - Locate and verify LaTeX source files
+            - Execute appropriate compilation commands
+            - Handle package dependencies
+            - Manage compilation errors
+            - Generate publication-ready PDFs
+            
+            Conversion Protocol:
+            1. Validate source LaTeX file
+            2. Check for required packages
+            3. Execute compilation process
+            4. Handle intermediate files
+            5. Verify PDF output quality
+            
+            Processing Guidelines:
+            - Verify file permissions
+            - Check for missing dependencies
+            - Handle compilation errors gracefully
+            - Ensure proper file encoding
+            - Validate output quality
+            
+            Quality Checks:
+            - Confirm successful compilation
+            - Verify PDF generation
+            - Check for missing references
+            - Validate image inclusion
+            - Ensure proper rendering
+            
+            Tool Usage Requirements:
+            - Use provided latex_conver_tools
+            - Follow proper file handling procedures
+            - Maintain error logging
+            - Implement retry logic if needed
+            """,
+            allow_delegation=False,
+            tools=ResearcherToolSet.latex_conver_tools(),
+            verbose=True,
+            max_iter=3
         )
-        
        
     
 

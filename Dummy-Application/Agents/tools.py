@@ -95,8 +95,8 @@ class ResearcherToolSet:
 
 
     # for latex  to pdf
-    @tool
-    def convert_latex_to_pdf(self, latex_file_name,output_directory="Your Researchers"):
+    @tool('compile_latex_to_pdf')
+    def compile_latex_to_pdf(self, latex_file_name,output_directory="Your Researchers"):
         """returns a pdf file with latex written
 
         Args:
@@ -161,16 +161,19 @@ class ResearcherToolSet:
             print( "File not found")
             return NotImplemented
 
-    def latex_conver_tools(): 
+    def latex_compiler_tools(): 
         return[
-            ResearcherToolSet.convert_latex_to_pdf,
-            ResearcherToolSet.latex_writer_tool
+            ResearcherToolSet.compile_latex_to_pdf
         ]   
+        
+    def latex_saver_tools():
+        return [
+            ResearcherToolSet.latex_writer_tool
+        ]
     
     def research_tools():
         web_search_tools = ExaSearchToolset.tools()
         return [
-            ArxivResearchTool(),
             ResearchTool.load_document,
             *web_search_tools  # Spread the tools from web_search_tools into the list
         ]

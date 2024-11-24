@@ -32,6 +32,24 @@ class Tasks:
             output_json=OutputModel
         )
     
+    def task_extract_paper(self, agent, conversation:Dict[str,str])->Task:
+        extraction_template="""
+        Extraction Protocol:
+        
+        CONTEXT:
+        {conversation_text}
+        
+        Use arxiv_research_tool to gather relelvant text of renowned authors and seminal work in that field 
+        
+        """
+        
+        conversation_text= "\n".join([f"{k}:{v}" for k,v in conversation.items()])
+        
+        return Task(
+            description= extraction_template.format(conversation_text=conversation_text),
+            expected_output="A structured dictionary with key: 'PAPER' ",
+            agent= agent 
+        )
     
     def task_research(self, agent, conversation: Dict[str, str]) -> Task:
         research_template = """
@@ -42,16 +60,9 @@ class Tasks:
 
 
             REQUIRED STEPS:
-            1. LITERATURE COLLECTION:
-            Use arxiv_research_tool
-            Requirements:
-            - Extract 4 papers per search (maximum allowed)
-            - Perform multiple searches with different keywords to get minimum 5 papers
-            - Focus on last 5 years
-            - Include seminal works
-            - Target renowned researchers
+            
 
-            2. RESEARCH ANALYSIS:
+            1. RESEARCH ANALYSIS:
             For each paper found:
             - Extract and document key findings
             - Analyze methodology
@@ -63,10 +74,10 @@ class Tasks:
             b) Methodology Analysis
             c) Empirical Evidence Review
 
-            3. CONTENT EXTRACTION:
+            2. CONTENT EXTRACTION:
             Use load_document for each paper's PDF URL
             
-            4. SYNTHESIS:
+            3. SYNTHESIS:
             Compile a structured report with:
             - Abstract
             - Literature Review
