@@ -143,6 +143,8 @@ class ResearchTool:
                 if extract_text and paper_info['pdf_link']:
                     text = ResearchTool.extract_text(paper_info['pdf_link'])
                     results["extracted_texts"].append(text)
+                    
+        
 
             return results
 
