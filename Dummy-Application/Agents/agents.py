@@ -180,7 +180,7 @@ class Agents:
             - Use provided `compile_latex_to_pdf` with a file_path of the .tex file to be compiled 
             """,
             allow_delegation=False,
-            tools=ResearcherToolSet.latex_conver_tools(),
+            tools=ResearcherToolSet.latex_saver_tools(),
             verbose=True,
             max_iter=3,
         )

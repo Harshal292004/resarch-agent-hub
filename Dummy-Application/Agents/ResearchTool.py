@@ -6,54 +6,30 @@ import PyPDF2
 import io
 from crewai_tools import tool
 import json
-from typing import Optional,Dict
+from typing import Optional,Dict,List
 from pydantic import BaseModel,ValidationError, Field
 from typing import Type
 from crewai_tools import BaseTool
 
 
 class ArxivResearchInput(BaseModel):
-    """Input schema for arxiv tool"""
-    argument: str = Field(
-        description='JSON string containing search parameters',
-        example='{"author": "Alan Turing", "title": "Computing Machinery", "category": "cs.AI", "max_results": 4, "sort_by": "relevance", "sort_order": "descending", "extract_text": true}'
-    )
+    author: str = Field(description='Author name')
+    title: str = Field(description='Paper title')
+    category: str = Field(description='Category')
+    max_results: int = Field(description='Maximum results')
+    sort_by: str = Field(description='Sort by')
+    sort_order: str = Field(description='Sort order')
+    extract_text: bool = Field(description='Extract text')
 
 class ArxivResearchTool(BaseTool):
     name: str = 'arxiv_research_tool'
-    description: str = """Useful to search the arxiv academic database and return relevant research papers.
-    The argument must be a JSON string with the following structure:
-    {
-        "author": "string",
-        "title": "string",
-        "category": "string",
-        "max_results": number,
-        "sort_by": "string",
-        "sort_order": "string",
-        "extract_text": boolean
-    }
-    """
+    description: str = """Useful to search the arXiv academic database ..."""
     args_schema: Type[BaseModel] = ArxivResearchInput
 
-    def _run(self, argument: str) -> Dict:
-        try:
-            # Parse the JSON string into a dictionary
-            params = json.loads(argument)
-            
-            # Validate required fields
-            required_fields = ['author', 'title', 'category', 'max_results', 'sort_by', 'sort_order', 'extract_text']
-            for field in required_fields:
-                if field not in params:
-                    raise ValueError(f"Missing required field: {field}")
-            
-            # Call the actual research implementation
-            return ResearchTool.arxiv_research_tool(argument)
-            
-        except json.JSONDecodeError:
-            return {"error": "Invalid JSON string provided"}
-        except Exception as e:
-            return {"error": str(e)}
-
+    def _run(self, argument: Dict) -> Dict:
+        # Convert the dictionary to a JSON string if needed
+        json_argument = json.dumps(argument)
+        return ResearchTool.arxiv_research_tool(json_argument)
 
 class ResearchTool:
     def __init__(self):

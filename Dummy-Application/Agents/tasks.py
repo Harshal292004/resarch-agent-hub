@@ -1,5 +1,6 @@
 from crewai import Task
 from typing import Dict, Any, List
+import json
 from PydanticBaseModels import (
     ConversationOutPutModel,
     ResearchPaperModel,
@@ -12,31 +13,27 @@ from PydanticBaseModels import (
 class Tasks:
     def format_input_dict(self, input_dict: Dict[str, str]) -> str:
         return "\n".join([f"{k}: {v}" for k, v in input_dict.items()])
-    
-    def unroll_results(self,input_dict:Dict):
-        formatted_papers=[]
-        for idx,paper in enumerate(input_dict['papers'],start=1):
-            paper_details=f"""
+    def unroll_results(self,results):
+        # Extract and format papers
+        formatted_papers = []
+        for idx, paper in enumerate(results["papers"], start=1):
+            paper_details = f"""
             Paper {idx}:
-            Title:{paper["title"]}
+            Title: {paper["title"]}
             Authors: {", ".join(filter(None, paper["authors"]))}
-            Summary:{paper["summary"]}
-            PDF Link:{paper["pdf_link"]}
+            Summary: {paper["summary"]}
+            PDF Link: {paper["pdf_link"]}
             """
             formatted_papers.append(paper_details.strip())
-        
-        extracted_texts= "\n".join(
-            [input_dict['extracted_texts']]
-        )
-        
-         # Extract extracted texts
+
+        # Extract extracted texts
         extracted_texts = "\n".join(
-            [f"Extracted Text {idx+1}: {text}" for idx, text in enumerate(input_dict["extracted_texts"])]
+            [f"Extracted Text {idx+1}: {text}" for idx, text in enumerate(results["extracted_texts"])]
         )
 
         return "\n\n".join(formatted_papers) + "\n\n" + extracted_texts
-
-
+            
+        
     def task_question(self, agent) -> Task:
         return Task(
             description=(
@@ -61,14 +58,29 @@ class Tasks:
         2. Focus on renowned authors and seminal work
         3. Store extracted content under 'PAPER' key
         """
+         # Create a dictionary to hold the parameters
+        params = {
+            'author': 'Asish Vaswani', 
+            'title': 'Attention is all you need', 
+            'category': 'cs.AI', 
+            'max_results': 10, 
+            'sort_by': 'lastUpdatedDate', 
+            'sort_order': 'descending', 
+            'extract_text': True
+        }
+        
+        # Convert the dictionary to a JSON string
+        params_json = json.dumps(params)
         
         return Task(
             description=extraction_template.format(
                 conversation_text=self.format_input_dict(conversation)
             ),
             expected_output="A structured dictionary with key: 'PAPER'",
-            agent=agent,
-            output_json=ResearchPaperModel
+            gent=agent,
+            async_execution=True,
+            output_json=ResearchOutComeModel,
+            config={'tool_input': params_json}
         )
     
     def task_research(self, agent, conversation: Dict[str, str],research_papers:Dict[str,Any]) -> Task:
@@ -102,12 +114,11 @@ class Tasks:
            - Conclusions
            - References
         """
-        unrolled_research_papers=self.unroll_results(research_papers)
-        conversation_text=self.format_input_dict(conversation)
+        research_papers_unrolled=self.unroll_results(research_papers)
         return Task(
             description=research_template.format(
-                conversation_text=conversation_text,
-                research_papers=unrolled_research_papers
+                conversation_text=self.format_input_dict(conversation),
+                research_papers=research_papers_unrolled
             ),
             expected_output="A structured dictionary with keys: 'abstract', 'literature_review', 'analysis', 'conclusion', 'references'",
             agent=agent,

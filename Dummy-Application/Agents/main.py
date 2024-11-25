@@ -51,8 +51,9 @@ def main():
     print(f"researched_papers_types: {type(researched_papers)}")
     print(f"researched_papers dict type: {type(researched_papers.to_dict())}")
     print(f"research_paper_outcome:{researched_papers.to_dict['PAPER']}")
+    
     research_paper=researched_papers.to_dict['PAPER']
-    task2 = tasks_manager.task_research(research_agent, conversation_dict)
+    task2 = tasks_manager.task_research(research_agent,conversation=conversation_dict,research_papers=research_paper)
     crew2 = Crew(
         agents=[research_agent],
         tasks=[task2],
@@ -77,7 +78,6 @@ def main():
     print(f"Summarizer outcomes: {formatted_research_outcomes}")
     print(f"Summarizer dict: {formatted_research_outcomes.to_dict()}")
    
-    """
     task4 = tasks_manager.task_convert_latex(latex_converter_agent)
     crew4 = Crew(
         agents=[latex_converter_agent],
@@ -99,44 +99,6 @@ def main():
     latex_code_pdf = crew5.kickoff()
     print(f"Outcomes with outcome: {type(latex_code_pdf)}")
     print(f"Outcomes with outcome: {latex_code_pdf}")
-    """
     
-    """ task2 = tasks_manager.task_research(research_agent, conversation_result.get("Conversation History"))
-    crew2 = Crew(
-        agents=[research_agent],
-        tasks=[task2],
-        verbose=True
-    )
-    research_result = crew2.kickoff()
-    print(f"Research Result: {research_result}") """
-    
-    """ # Create tasks
-    task1 = tasks_manager.task_question(questioning_agent)
-    task2 = tasks_manager.task_research(research_agent)
-    task3 = tasks_manager.format_research(research_summarizer_agent)
-    task4 = tasks_manager.task_convert_latex(latex_converter_agent)
-    task5 = tasks_manager.task_convert_latex_to_pdf(latex_to_pdf_agent)
-    
-    # Create crew with sequential tasks
-    crew = Crew(
-        agents=[
-            questioning_agent,
-            research_agent,
-            research_summarizer_agent,
-            latex_converter_agent,
-            latex_to_pdf_agent
-        ],
-        tasks=[task1, task2, task3, task4, task5],
-        process="sequential",
-        verbose=True
-    )
-    
-    # Execute the workflow
-    result = crew.kickoff()
-    
-    print("\nResearch Paper Generation Complete!")
-    print(f"Result: {result}")
-    """
-
 if __name__ == "__main__":
     main()
