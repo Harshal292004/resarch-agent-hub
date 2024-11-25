@@ -36,20 +36,26 @@ We aim to build a research hub like arXiv but with a twist: instead of tradition
    git clone https://github.com/yourusername/ai-research-generator.git
    cd ai-research-generator
    ```
+2. Create virtual env
+   ```bash
+   python -m venv env
+   ```
 
-2. Install dependencies:
+3. Install dependencies:
    ```bash
    pip install -r -q  requirements.txt 
    ```
 
-3. Set up environment variables:
+4. Set up environment variables:
    ```bash
    # Create a .env file and add your API keys
    GROQ_API_KEY="YOUR_KEY_GOES_HERE"
    ```
 
-4. Get your API key here:
+5. Get your API key here:
    - GROQ API key ([Get it here](https://console.groq.com/playground))
+  
+6. Set up a latex compiler by downloading miktex from ([here](https://miktex.org/download))
 
 ## 🌟 Future Plans
 
