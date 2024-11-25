@@ -77,7 +77,7 @@ class Tasks:
                 conversation_text=self.format_input_dict(conversation)
             ),
             expected_output="A structured dictionary with key: 'PAPER'",
-            gent=agent,
+            agent=agent,
             async_execution=True,
             output_json=ResearchOutComeModel,
             config={'tool_input': params_json}
