@@ -3,35 +3,34 @@ from crewai import Agent, LLM
 from dotenv import load_dotenv
 from tools import ResearcherToolSet
 from ResearchTool import ArxivResearchTool
+
 load_dotenv()
+
 
 class Agents:
     def __init__(self):
-        self.llm = LLM(
-            model="groq/llama3-8b-8192",
-            api_key=os.getenv("GROQ_API_KEY")    
-        )
-        
+        self.llm = LLM(model="groq/llama3-8b-8192", api_key=os.getenv("GROQ_API_KEY"))
+
     def questioning_agent(self):
         return Agent(
             llm=self.llm,
-            role='Questioner',
+            role="Questioner",
             goal="Consistently capture user research requirements using process_interaction tool",
             backstory="""You are a systematic data capture agent. 
             - Always use the process_interaction tool 
             - Ensure consistent output structure
             - Preserve exact conversation flow
             - Do not deviate from the original interaction""",
-            allow_delegation=False,  
+            allow_delegation=False,
             tools=ResearcherToolSet.questioning_tools(),
             verbose=False,
-            max_iter=1
-        ) 
-        
+            max_iter=1,
+        )
+
     def research_paper_agent(self):
         return Agent(
             llm=self.llm,
-            role='Academic Research Explorer',
+            role="Academic Research Explorer",
             goal="""
             Identify and analyze relevant research papers by:
             1. Understanding the core research requirements
@@ -74,13 +73,13 @@ class Agents:
             allow_delegation=False,
             tools=[ArxivResearchTool()],
             verbose=True,
-            max_iter=3
+            max_iter=3,
         )
-        
+
     def research_agent(self):
         return Agent(
             llm=self.llm,  # Add llm parameter
-            role='Researcher',
+            role="Researcher",
             goal="Conduct comprehensive academic research following a structured methodology",
             backstory="""You are an expert research analyst with deep expertise in systematic literature review 
             and academic research synthesis.
@@ -96,13 +95,13 @@ class Agents:
             - get_contents: Get webpage contents""",
             tools=ResearcherToolSet.research_tools(),
             verbose=True,
-            allow_delegation=False
+            allow_delegation=False,
         )
-        
+
     def research_summarizer_agent(self):
         return Agent(
             llm=self.llm,
-            role='Research Summarizer',
+            role="Research Summarizer",
             goal="Organize research content into a clean, structured format ready for LaTeX conversion",
             backstory="""You are an expert research organizer who excels at:
             1. Converting cluttered research into clear, structured content
@@ -113,13 +112,13 @@ class Agents:
             Your job is to take research findings and organize them into a clean format 
             that another agent can easily convert to LaTeX.""",
             allow_delegation=False,
-            verbose=False
+            verbose=False,
         )
-        
+
     def latex_converter_agent(self):
         return Agent(
             llm=self.llm,
-            role='LaTeX Code Specialist',
+            role="LaTeX Code Specialist",
             goal="""
             Transform formatted research into professional LaTeX code by:
             1. Converting structured content into proper LaTeX syntax
@@ -160,13 +159,13 @@ class Agents:
             allow_delegation=False,
             tools=ResearcherToolSet.latex_saver_tools(),
             verbose=True,
-            max_iter=2
+            max_iter=2,
         )
-    
+
     def latex_to_pdf_agent(self):
         return Agent(
             llm=self.llm,
-            role='LaTeX PDF Compiler Specialist',
+            role="LaTeX PDF Compiler Specialist",
             goal="""
             Transform LaTeX (.tex) files into professional PDF documents by:
             1. Executing proper LaTeX compilation process using the `compile_latex_to_pdf` tool
@@ -183,5 +182,5 @@ class Agents:
             allow_delegation=False,
             tools=ResearcherToolSet.latex_conver_tools(),
             verbose=True,
-            max_iter=3
+            max_iter=3,
         )

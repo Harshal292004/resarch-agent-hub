@@ -20,7 +20,7 @@ def main():
     
     # Create agents
     questioning_agent = agents_manager.questioning_agent()
-    find_paper_agent = agents_manager.find_paper_agent()
+    research_paper_agent= agents_manager.research_paper_agent()
     research_agent = agents_manager.research_agent()
     research_summarizer_agent = agents_manager.research_summarizer_agent()
     latex_converter_agent = agents_manager.latex_converter_agent()
@@ -36,26 +36,22 @@ def main():
     )
     
     conversation_result = crew1.kickoff()
-    
-    print(f"Conversation_result: {conversation_result}")
-    print(f"Conversation_result type: {type(conversation_result)}")
-    print(f"Conversation dict type: {type(conversation_result.to_dict())}")
-    print(f"Conversation outcome: {conversation_result.to_dict()['conversation']}")
     conversation_dict = conversation_result.to_dict()['conversation']
+    print(f"Conversation outcome: {conversation_dict}")
     
-    task2_a = tasks_manager.task_extract_paper(find_paper_agent, conversation_dict)
-    crew2_a = Crew(
-        agents=[find_paper_agent],
-        tasks=[task2_a],
+    task2 = tasks_manager.task_extract_paper(research_paper_agent, conversation_dict)
+    crew2 = Crew(
+        agents=[research_paper_agent],
+        tasks=[task2],
         verbose=True
     )
+    researched_papers = crew2.kickoff()
     
-    researched_papers = crew2_a.kickoff()
     print(f"researched_papers_result: {researched_papers}")
     print(f"researched_papers_types: {type(researched_papers)}")
     print(f"researched_papers dict type: {type(researched_papers.to_dict())}")
     print(f"research_paper_outcome:{researched_papers.to_dict['PAPER']}")
-    
+    research_paper=researched_papers.to_dict['PAPER']
     task2 = tasks_manager.task_research(research_agent, conversation_dict)
     crew2 = Crew(
         agents=[research_agent],

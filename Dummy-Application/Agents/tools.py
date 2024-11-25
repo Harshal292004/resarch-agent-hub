@@ -1,36 +1,16 @@
 import os
 import io
 import re
-import PyPDF2
-import subprocess
-import requests
-import urllib.request as libreq
-from bs4 import BeautifulSoup
 import json
-from urllib.parse import quote
+import PyPDF2
+import requests
+import subprocess
 from crewai_tools import tool
-
-""" 
-from langchain_community.document_loaders import PyPDFLoader
-from langchain_community.embeddings import HuggingFaceBgeEmbeddings
-from langchain_text_splitters.character import CharacterTextSplitter
-from langchain_community.vectorstores import FAISS 
-"""
-from langchain.prompts import PromptTemplate
-from langchain.memory import ConversationBufferMemory
-from langchain.chains import ConversationChain
-from langchain_groq import ChatGroq
-
 from dotenv import load_dotenv
 from QuestioningTool import QuestioningTool
-from tasks import OutputModel
 from ResearchTool import ResearchTool
 from ExaSearchToolset import ExaSearchToolset
-
-from typing import Type
-from crewai_tools import BaseTool
-from pydantic import BaseModel, Field
-from ResearchTool import ArxivResearchTool
+from PydanticBaseModels import ConversationOutPutModel,ResearchOutComeModel,ResearchFormatModel,ResearchPaperModel,LatexCodeModel,LatexCompiledPathModel
 load_dotenv()
 
 
@@ -39,7 +19,6 @@ class ResearcherToolSet:
     @tool
     def process_interaction():
         """Process the user interaction with improved context management and flow"""
-        
         print("Research Assistant: Hello! I'm here to help with your research project. What would you like to explore?")
         question_tool=QuestioningTool()
         chain = question_tool.create_research_agent()
@@ -64,7 +43,7 @@ class ResearcherToolSet:
         conversation_dict = question_tool.format_conversation(chain.memory.chat_memory.messages)
         
         # Create an OutputModel instance with the dictionary
-        output = OutputModel(
+        output = ConversationOutPutModel(
             conversation=conversation_dict
         )
         return output
@@ -72,7 +51,7 @@ class ResearcherToolSet:
     
      # for latex writer
     @tool
-    def latex_writer_tool( research_latex_code, file_name: str):
+    def latex_writer_tool( research_latex_code:str, file_name: str):
         """
         Processes and writes LaTeX content to a .tex file.
 
@@ -81,7 +60,7 @@ class ResearcherToolSet:
             file_name (str): The name of the research document.
 
         Returns:
-            str: Success or error message.
+            LatexCodeModel: Success or error message.
         """
         # clean the name
         file_name = re.sub(r"[^\w\s]", "", file_name)
@@ -90,10 +69,10 @@ class ResearcherToolSet:
         try:
             with open(file_name, "w") as file:
                 file.write(research_latex_code)
+            return LatexCodeModel(tex_file_path=file_name,research_name=file_name )
         except Exception as e:
-            return f"Error while creating the file: {str(e)}"
-
-
+            return f"Error {e}"
+        
     # for latex  to pdf
     @tool('compile_latex_to_pdf')
     def compile_latex_to_pdf(self, latex_file_name,output_directory="Your Researchers"):
@@ -153,10 +132,11 @@ class ResearcherToolSet:
             if result.returncode==0:
                 print("PDF compiled successfully!")
                 pdf_file=os.path.splitext(os.path.basename(latex_file_name))[0]+".pdf"
-                return os.path.join(output_directory or ".",pdf_file)
+                return LatexCompiledPathModel(pdf_file_path=os.path.join(output_directory or ".",pdf_file))
             else:
                 print("Compilation failed")
                 print(result.stderr)
+                return f"Compilation failed "
         except FileNotFoundError:
             print( "File not found")
             return NotImplemented
@@ -183,51 +163,3 @@ class ResearcherToolSet:
         return[
             ResearcherToolSet.process_interaction
         ]
-        
-    """ def storage_tools():
-        return[
-            ResearcherToolSet.load_document_to_vector_db
-        ] """
-        
-        
-    """ @tool
-    def load_document_to_vector_db(self, vector_db: FAISS, research_paper_path):
-        _summary_
-
-        Args:
-            vector_db (FAISS): _description_
-            research_paper_path (_type_): _description_
-
-        Returns:
-            _type_: _description_
-       
-        try:
-            # Create loader
-            loader = PyPDFLoader(research_paper_path)
-            
-            # Load documents
-            documents = loader.load()
-            
-            # Create embeddings
-            embeddings = HuggingFaceBgeEmbeddings()
-            
-            # Create text splitter
-            text_splitter = CharacterTextSplitter(
-                separator='\n',
-                chunk_size=500,
-                chunk_overlap=200
-            )
-            
-            # Split documents
-            doc_chunks = text_splitter.split_documents(documents)
-            
-            # Add to vector db
-            vector_db.add_documents(doc_chunks, embeddings)
-            
-            return documents
-            
-        except Exception as e:
-            print(f"Error occurred: {e}")
-            return None
-    
-     """

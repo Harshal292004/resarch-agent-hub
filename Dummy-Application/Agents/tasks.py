@@ -47,12 +47,13 @@ class Tasks:
             output_json=ResearchPaperModel
         )
     
-    def task_research(self, agent, conversation: Dict[str, str]) -> Task:
+    def task_research(self, agent, conversation: Dict[str, str],research_papers:Dict[str,Any]) -> Task:
         research_template = """
         RESEARCH PROTOCOL:
         
         CONTEXT:
         {conversation_text}
+        {research_papers}
 
         REQUIRED STEPS:
         1. Research Analysis:
@@ -77,6 +78,10 @@ class Tasks:
            - Conclusions
            - References
         """
+        results = {
+                "papers": [],
+                "extracted_texts": []
+            }
         
         return Task(
             description=research_template.format(

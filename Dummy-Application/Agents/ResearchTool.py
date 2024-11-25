@@ -86,29 +86,6 @@ class ResearchTool:
     def arxiv_research_tool(
         payload
     ) -> Dict:
-        """Useful to search the arxiv academic data base  and return relevant research papaers 
-        :param payload: str, a string representation of dictionary containing the following keys:
-
-        author: str,the author to search for ,
-        title: str,the title of the research paper ,
-        category: str,the category of the subject of research,
-        max_results: int ,number of papers ,
-        sort_by: str, select from "relevance", "lastUpdatedDate", "submittedDate",
-        sort_order: str, "ascending" or "descending",
-        extract_text: bool,  "True"
-        
-        example payload:
-        {
-            "author" : "Geoffry Hinton",
-            "title": "Attention is all you need",
-            "category":"cs.AI",
-            "max_results":  1,
-            "sort_by":"relevance",
-            "sort_order":"ascending",
-            "extract_text":"True"
-        }
-        """
-        """Search and extract research papers from ArXiv."""
         try:
             author = json.loads(payload)['author']
             title = json.loads(payload)['title']
@@ -175,14 +152,6 @@ class ResearchTool:
     
     @staticmethod
     def extract_text(file_path_url):
-        """This tool helps in loading documents and extracting text from them for research purpose 
-        
-        Args:
-            file_path_url (str): its the url of the pdf of which the text is to extracted 
-
-        Returns:
-            str: returns the first 2 pages of research done 
-        """
         try:
             response=requests.get(file_path_url)
             response.raise_for_status() # Raise an exception for bad status codes
