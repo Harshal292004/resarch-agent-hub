@@ -37,7 +37,13 @@ class Tasks:
     def task_question(self, agent) -> Task:
         return Task(
             description=(
-                "Use process_interaction tool to gather initial research information"
+                """Use process_interaction tool to gather initial research information
+                These keywords must never be translated and transformed:
+                - Action:
+                - Thought:
+                - Action Input:
+                because they are part of the thinking process instead of the output.
+                """
             ),
             expected_output=(
                 "A structured dictionary with key: 'conversation'"
@@ -57,21 +63,24 @@ class Tasks:
         1. Use arxiv_research_tool to gather relevant papers
         2. Focus on renowned authors and seminal work
         3. Store extracted content under 'PAPER' key
+        
+        
+        These keywords must never be translated and transformed:
+        - Action:
+        - Thought:
+        - Action Input:
+        because they are part of the thinking process instead of the output.
         """
-         # Create a dictionary to hold the parameters
         params = {
-            'author': 'Asish Vaswani', 
-            'title': 'Attention is all you need', 
-            'category': 'cs.AI', 
-            'max_results': 10, 
-            'sort_by': 'lastUpdatedDate', 
-            'sort_order': 'descending', 
-            'extract_text': True
+            "author": "Asish Vaswani",
+            "title": "Attention is all you need",
+            "category": "cs.AI",
+            "max_results": 10,
+            "sort_by": "lastUpdatedDate",
+            "sort_order": "descending",
+            "extract_text": True,
         }
-        
-        # Convert the dictionary to a JSON string
-        params_json = json.dumps(params)
-        
+
         return Task(
             description=extraction_template.format(
                 conversation_text=self.format_input_dict(conversation)
@@ -79,9 +88,9 @@ class Tasks:
             expected_output="A structured dictionary with key: 'PAPER'",
             agent=agent,
             async_execution=True,
-            output_json=ResearchOutComeModel,
-            config={'tool_input': params_json}
+            config=params,  # Pass dictionary directly
         )
+
     
     def task_research(self, agent, conversation: Dict[str, str],research_papers:Dict[str,Any]) -> Task:
         research_template = """
@@ -113,6 +122,12 @@ class Tasks:
            - Results Analysis
            - Conclusions
            - References
+           
+        These keywords must never be translated and transformed:
+        - Action:
+        - Thought:
+        - Action Input:
+        because they are part of the thinking process instead of the output.
         """
         research_papers_unrolled=self.unroll_results(research_papers)
         return Task(
@@ -140,6 +155,12 @@ class Tasks:
         4. Standardized citations (Author, Year)
         5. Minimal formatting
         6. Consistent citation style
+        
+        These keywords must never be translated and transformed:
+        - Action:
+        - Thought:
+        - Action Input:
+        because they are part of the thinking process instead of the output.
         """
         
         return Task(
@@ -185,6 +206,12 @@ class Tasks:
         3. Follow academic formatting
         
         OUTPUT FILE: {research_name}.tex
+
+        These keywords must never be translated and transformed:
+        - Action:
+        - Thought:
+        - Action Input:
+        because they are part of the thinking process instead of the output.
         """
         
         return Task(
@@ -209,6 +236,11 @@ class Tasks:
             REQUIREMENTS:
             1. Verify LaTeX syntax
             2. Generate formatted PDF
+            These keywords must never be translated and transformed:
+            - Action:
+            - Thought:
+            - Action Input:
+            because they are part of the thinking process instead of the output.
             """,
             expected_output="Dictionary with key: 'pdf_file_path'",
             output_file=f"{latex_file_path}.pdf",

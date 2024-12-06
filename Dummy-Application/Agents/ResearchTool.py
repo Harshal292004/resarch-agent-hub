@@ -10,26 +10,38 @@ from typing import Optional,Dict,List
 from pydantic import BaseModel,ValidationError, Field
 from typing import Type
 from crewai_tools import BaseTool
-
-
+import logging
+from typing import ClassVar
+logging.basicConfig(level=logging.DEBUG)
+    
 class ArxivResearchInput(BaseModel):
-    author: str = Field(description='Author name')
-    title: str = Field(description='Paper title')
-    category: str = Field(description='Category')
-    max_results: int = Field(description='Maximum results')
-    sort_by: str = Field(description='Sort by')
-    sort_order: str = Field(description='Sort order')
-    extract_text: bool = Field(description='Extract text')
+    author: str = Field("", description="Author name")
+    title: str = Field("", description="Paper title")
+    category: str = Field("cs.AI", description="ArXiv category")
+    max_results: int = Field(10, description="Maximum number of results")
+    sort_by: str = Field("lastUpdatedDate", description="Sort by field")
+    sort_order: str = Field("descending", description="Sort order")
+    extract_text: bool = Field(True, description="Extract text from papers")
+
 
 class ArxivResearchTool(BaseTool):
-    name: str = 'arxiv_research_tool'
-    description: str = """Useful to search the arXiv academic database ..."""
+    name: str = "arxiv_research_tool"
+    description: str = "Search ArXiv database for academic research."
     args_schema: Type[BaseModel] = ArxivResearchInput
 
-    def _run(self, argument: Dict) -> Dict:
-        # Convert the dictionary to a JSON string if needed
-        json_argument = json.dumps(argument)
-        return ResearchTool.arxiv_research_tool(json_argument)
+    # Initialize logger at the class level
+    logger: ClassVar = logging.getLogger(__name__)
+
+    def _run(self, **params):
+        self.logger.debug(f"Received params: {params}")
+        try:
+            result = ResearchTool.arxiv_research_tool(params)
+            self.logger.debug(f"Result: {result}")
+            return result
+        except Exception as e:
+            self.logger.error(f"Error: {str(e)}")
+            return {"error": str(e)}
+
 
 class ResearchTool:
     def __init__(self):
@@ -59,18 +71,15 @@ class ResearchTool:
     
  
     @staticmethod
-    def arxiv_research_tool(
-        payload
-    ) -> Dict:
+    def arxiv_research_tool(params: Dict) -> Dict:
         try:
-            author = json.loads(payload)['author']
-            title = json.loads(payload)['title']
-            category=json.loads(payload)['category']
-            max_results=json.loads(payload)['max_results']
-            sort_by=json.loads(payload)['sort_by']
-            sort_order=json.loads(payload)['sort_order']
-            extract_text=json.loads(payload)['extract_text']
-            # Input validation
+            author = params.get('author', '')
+            title = params.get('title', '')
+            category = params.get('category', 'cs.AI')
+            max_results = params.get('max_results', 10)
+            sort_by = params.get('sort_by', 'relevance')
+            sort_order = params.get('sort_order', 'ascending')
+            extract_text = params.get('extract_text', True)
             if not author and not title and not category:
                  category = "cs.AI"
             search_parts = []
@@ -92,7 +101,7 @@ class ResearchTool:
                 "sortOrder": sort_order.lower() if sort_order.lower() in ["ascending", "descending"] else "ascending",
             }
             
-            url = f"{base_url}?{'&'.join(f'{k}={v}' for k, v in params.items())}"
+            url = f"{base_url}?{'&'.join(f'{quote(str(k))}={quote(str(v))}' for k, v in params.items())}"
 
             # Execute request
             with libreq.urlopen(url, timeout=10) as response:

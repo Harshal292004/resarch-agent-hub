@@ -9,7 +9,7 @@ load_dotenv()
 
 class Agents:
     def __init__(self):
-        self.llm = LLM(model="groq/llama3-8b-8192", api_key=os.getenv("GROQ_API_KEY"))
+        self.llm = LLM(model="groq/llama-3.1-70b-versatile", api_key=os.getenv("GROQ_API_KEY"))
 
     def questioning_agent(self):
         return Agent(
