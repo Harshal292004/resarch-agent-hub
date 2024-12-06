@@ -1,0 +1,7 @@
+crewai
+langchain
+langchain_groq
+pydantic
+dotenv
+crewai_tools
+langchain_community 
